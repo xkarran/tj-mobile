@@ -391,7 +391,13 @@ function parseConfig(rows){
   const fasesRaw = {};
 
   rows.forEach(r => {
-    const [tipo, grupo, itemId, campo, valor] = r;
+    // Formato: [tipo, grupo/id, itemId, campo, valor]
+    // Para fases: ['fase', faseId, campo, 'value', valor]
+    const tipo   = r[0];
+    const grupo  = r[1];
+    const itemId = r[2];
+    const campo  = r[3];
+    const valor  = r[4];
 
     if(tipo === 'setup' && campo === 'name'){
       CFG.setups.push({ id: itemId, name: valor, color: '' });
@@ -407,9 +413,16 @@ function parseConfig(rows){
     if(tipo === 'propfirm' && campo === 'name'){
       CFG.cuentas.push(valor);
     }
+
+    // Fases: ['fase', faseId, campo, 'value', valor]
+    // grupo = faseId, itemId = campo real, campo = 'value', valor = valor real
     if(tipo === 'fase'){
-      if(!fasesRaw[itemId]) fasesRaw[itemId] = {};
-      fasesRaw[itemId][campo] = valor;
+      const faseId    = grupo;   // r[1] = id de la fase (f01, f02...)
+      const faseCampo = itemId;  // r[2] = campo (nombre, wizPaso, grupos, preguntas...)
+      const faseValor = valor;   // r[4] = valor
+
+      if(!fasesRaw[faseId]) fasesRaw[faseId] = {};
+      fasesRaw[faseId][faseCampo] = faseValor;
     }
   });
 
@@ -417,20 +430,20 @@ function parseConfig(rows){
   const faseIds = Object.keys(fasesRaw);
   if(faseIds.length > 0){
     const rebuilt = faseIds.map(id => {
-      const f = fasesRaw[id];
+      const f    = fasesRaw[id];
       const base = FASES_DEFAULT.find(fd=>fd.id===id) || {};
       let preguntas = base.preguntas || [];
-      let grupos    = base.grupos || [];
+      let grupos    = base.grupos    || [];
       try { if(f.preguntas) preguntas = JSON.parse(f.preguntas); } catch(_){}
       try { if(f.grupos)    grupos    = JSON.parse(f.grupos);    } catch(_){}
       return {
         id,
-        wizPaso: parseInt(f.wizPaso || base.wizPaso || 0),
-        nombre:  f.nombre || base.nombre || id,
+        wizPaso:  parseInt(f.wizPaso !== undefined ? f.wizPaso : (base.wizPaso || 0)),
+        nombre:   f.nombre || base.nombre || id,
         preguntas,
         grupos,
       };
-    }).sort((a,b)=>a.wizPaso-b.wizPaso);
+    }).sort((a,b) => a.wizPaso - b.wizPaso);
     if(rebuilt.length > 0) CFG.fases = rebuilt;
   }
 }
