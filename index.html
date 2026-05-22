@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TJ Mobile"/>
+<meta name="theme-color" content="#000000"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="manifest.json"/>
+<title>TJ · Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* Colores funcionales fijos */
+  --green:#00e676;--red:#ff3d3d;--yellow:#ffd740;--orange:#ff9800;--purple:#bb86fc;
+  /* Tema por defecto (dark-blue) — se sobreescribe por JS */
+  --bg:#070b10;--bg2:#0c1219;--bg3:#111c28;--bg4:#172436;--bg5:#1e2e44;
+  --border:#213040;--border2:#2c4158;--border3:#3a5472;
+  --text:#e2eaf5;--text2:#96aec8;--text3:#5e7a9a;
+  --accent:#00d4ff;--accent2:#0099bb;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+  --r:10px;--safe:env(safe-area-inset-bottom,16px);--top:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans)}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);transition:transform .28s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.screen.hidden{transform:translateX(100%);pointer-events:none}
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 16px;padding-top:calc(12px + var(--top));border-bottom:1px solid var(--border);flex-shrink:0}
+.btn-back{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;transition:.12s}
+.btn-back:active{background:var(--bg4)}
+.tb-title{font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:2px;text-transform:uppercase;flex:1}
+.tb-action{font-size:11px;color:var(--accent);font-family:var(--mono);cursor:pointer;padding:6px 10px;border-radius:6px;border:1px solid rgba(250,204,21,.25);background:rgba(250,204,21,.07);white-space:nowrap;transition:.12s}
+.tb-action:active{background:rgba(250,204,21,.15)}
+.scroll-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pad{padding:18px 16px}
+.field{margin-bottom:14px}
+.flabel{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mono);margin-bottom:5px;display:block}
+.finput,.fselect{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;font-family:var(--sans);padding:11px 13px;outline:none;-webkit-appearance:none;transition:border-color .12s}
+.finput:focus,.fselect:focus{border-color:var(--accent);background:var(--bg4)}
+.fselect{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.fselect option{background:var(--bg3)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.ftextarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--sans);padding:11px 13px;outline:none;resize:none;min-height:76px;transition:border-color .12s}
+.ftextarea:focus{border-color:var(--accent)}
+.sec-label{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;font-family:var(--mono);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.sec-label:first-child{margin-top:0}
+.pills{display:flex;flex-wrap:wrap;gap:7px}
+.pill{padding:8px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:var(--bg3);color:var(--text3);transition:.12s;user-select:none;font-family:var(--mono)}
+.pill:active{transform:scale(.95)}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#000}
+.wiz-dots{display:flex;gap:4px;padding:10px 16px 0;flex-shrink:0}
+.wd{flex:1;height:3px;border-radius:2px;background:var(--border2);transition:background .3s}
+.wd.done{background:#ca9a00}.wd.now{background:var(--accent)}
+.wiz-hdr{padding:12px 16px 0;flex-shrink:0}
+.wh-label{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+.wh-name{font-size:17px;font-weight:700}
+.wiz-footer{padding:12px 16px;padding-bottom:calc(12px + var(--safe));border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px;background:var(--bg)}
+.wbtn{flex:1;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:.12s;font-family:var(--sans)}
+.wbtn:active{transform:scale(.97)}
+.wb-p{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.wb-n{background:var(--accent);color:#000}
+.wb-s{background:var(--green);color:#000}
+.emo-pair{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.emo-pair.trio{grid-template-columns:1fr 1fr 1fr}
+.emo-half{padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:.12s;background:var(--bg3);border:2px solid transparent;margin:-1px}
+.emo-half+.emo-half{border-left:1px solid var(--border)}
+.emo-half:active{opacity:.7}
+.emo-half.ep.sel{background:rgba(0,230,118,.2);border-color:var(--green)}
+.emo-half.en.sel{background:rgba(255,61,61,.2);border-color:var(--red)}
+.emo-half.eu.sel{background:rgba(255,215,64,.18);border-color:var(--yellow)}
+.emo-emoji{font-size:20px;line-height:1}
+.emo-name{font-size:10px;font-weight:600;text-align:center;line-height:1.2}
+.ep .emo-name{color:var(--green)}.en .emo-name{color:var(--red)}.eu .emo-name{color:var(--yellow)}
+.sem-opt{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:10px;border:2px solid var(--border);background:var(--bg3);cursor:pointer;transition:.15s;margin-bottom:8px}
+.sem-opt:active{transform:scale(.98)}
+.sem-opt.sel-g{border-color:var(--green);background:rgba(0,230,118,.08)}
+.sem-opt.sel-y{border-color:var(--yellow);background:rgba(255,215,64,.08)}
+.sem-opt.sel-r{border-color:var(--red);background:rgba(255,61,61,.08)}
+.sem-dot{width:15px;height:15px;border-radius:50%;flex-shrink:0}
+.sem-lbl{font-size:13px;font-weight:700;flex:1}
+.sem-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.sem-act{font-size:10px;font-family:var(--mono);flex-shrink:0}
+.sel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sel-opt{padding:11px 12px;border-radius:8px;border:2px solid var(--border);background:var(--bg3);cursor:pointer;transition:.12s}
+.sel-opt:active{transform:scale(.97)}
+.sel-lbl{font-size:13px;font-weight:700}
+.sel-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.sino-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sino-btn{padding:12px;border-radius:8px;border:2px solid var(--border);background:var(--bg3);cursor:pointer;transition:.12s;text-align:center;font-size:12px;font-weight:700}
+.sino-btn:active{transform:scale(.97)}
+.stars{display:flex;gap:10px;font-size:30px;margin-bottom:14px}
+.star{cursor:pointer;color:var(--text3)}.star.lit{color:var(--yellow)}
+.warn{background:rgba(255,61,61,.1);border:1px solid rgba(255,61,61,.3);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--red);margin-top:8px;display:none}
+.warn.show{display:block}
+.dt-row{display:grid;gap:4px}
+.dt-row.date-row{grid-template-columns:2fr 1.5fr 1.5fr}
+.dt-row.time-row{grid-template-columns:1fr 1fr 1fr}
+.dt-sel{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--sans);padding:10px 4px;outline:none;-webkit-appearance:none;text-align:center;cursor:pointer;transition:border-color .12s}
+.dt-sel:focus{border-color:var(--accent);background:var(--bg4)}
+.dt-sel option{background:var(--bg3)}
+.dt-req-hint{font-size:9px;color:var(--red);font-family:var(--mono);margin-top:3px;display:none}
+.dt-req-hint.show{display:block}
+#s-home{justify-content:center;align-items:center}
+.h-logo{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:4px;margin-bottom:4px}
+.h-sub{font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:44px}
+.h-btns{display:flex;flex-direction:column;gap:12px;width:100%;padding:0 26px;max-width:380px}
+.hbtn{display:flex;align-items:center;gap:14px;padding:17px 18px;border-radius:var(--r);border:1px solid;cursor:pointer;transition:.12s;user-select:none}
+.hbtn:active{transform:scale(.97)}
+.hb-new{background:var(--accent);border-color:var(--accent);color:#000}
+.hb-sec{background:var(--bg2);border-color:var(--border2);color:var(--text)}
+.hb-icon{font-size:20px;flex-shrink:0}
+.hb-lbl{font-size:14px;font-weight:700}
+.hb-sub{font-size:11px;opacity:.5;margin-top:1px}
+.h-footer{position:absolute;bottom:calc(18px + var(--safe));width:100%;text-align:center;font-size:10px;font-family:var(--mono);color:var(--text3)}
+.hf-bar{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.hf-bar::-webkit-scrollbar{display:none}
+.hf{white-space:nowrap;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;font-family:var(--mono)}
+.hf.on{background:var(--accent);border-color:var(--accent);color:#000}
+.hi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;margin:0 16px 10px;cursor:pointer;transition:.12s;position:relative;overflow:hidden}
+.hi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.hi.win::before{background:var(--green)}.hi.loss::before{background:var(--red)}
+.hi:active{background:var(--bg3)}
+.hi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.hi-setup{font-size:12px;font-weight:700}
+.hi-pnl{font-family:var(--mono);font-size:14px;font-weight:700}
+.hi-pnl.pos{color:var(--green)}.hi-pnl.neg{color:var(--red)}
+.hi-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.hi-tag{font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 7px;border-radius:4px;font-family:var(--mono)}
+.hi-bot{display:flex;justify-content:space-between}
+.hi-date{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.hi-dir{font-size:10px;font-weight:700;font-family:var(--mono)}
+.hi-dir.long{color:var(--green)}.hi-dir.short{color:var(--red)}
+.hist-empty{text-align:center;padding:50px 20px;color:var(--text3);font-size:13px}
+.bov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;opacity:0;pointer-events:none;transition:opacity .22s}
+.bov.show{opacity:1;pointer-events:all}
+.bsheet{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:16px 16px 0 0;border-top:1px solid var(--border2);padding:22px 18px;padding-bottom:calc(22px + var(--safe));z-index:501;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.bsheet.show{transform:translateY(0)}
+.bs-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:14px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.show{opacity:1;pointer-events:all}
+.spinner{width:34px;height:34px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:calc(70px + var(--safe));left:50%;transform:translateX(-50%) translateY(14px);background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 16px;font-size:12px;font-family:var(--mono);color:var(--text);z-index:9999;opacity:0;transition:all .22s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
+#emo-tooltip{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;z-index:800;max-width:280px;width:90%;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+#emo-tooltip.show{opacity:1}
+#emo-tooltip .et-emoji{font-size:28px;margin-bottom:4px}
+#emo-tooltip .et-name{font-size:14px;font-weight:700;margin-bottom:4px}
+#emo-tooltip .et-desc{font-size:12px;color:var(--text2);line-height:1.4}
+#emo-tooltip .et-close{font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono)}
+/* Splash */
+#pwa-splash{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+#pwa-splash.hide{opacity:0;pointer-events:none}
+.splash-icon{font-size:52px;margin-bottom:14px}
+.splash-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:4px}
+.splash-sub{font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:5px}
+</style>
+
+<script>
+(function(){
+  var THEME_VARS={
+    'dark-blue':{'--bg':'#070b10','--bg2':'#0c1219','--bg3':'#111c28','--bg4':'#172436','--border':'#213040','--border2':'#2c4158','--text':'#e2eaf5','--text2':'#96aec8','--text3':'#5e7a9a','--accent':'#00d4ff','--accent2':'#0099bb'},
+    'soft-dark':{'--bg':'#111214','--bg2':'#18191d','--bg3':'#202226','--bg4':'#28292f','--border':'#2e3038','--border2':'#3c3e48','--text':'#dde3ee','--text2':'#a0a8bb','--text3':'#696f84','--accent':'#6c8cff','--accent2':'#4a6bdd'},
+    'dark-green':{'--bg':'#080c08','--bg2':'#0e150e','--bg3':'#141e14','--bg4':'#1a261a','--border':'#223022','--border2':'#2e4030','--text':'#d4f0dc','--text2':'#85b890','--text3':'#5a8a64','--accent':'#00e676','--accent2':'#00a152'},
+    'slate':{'--bg':'#1a1f2e','--bg2':'#232944','--bg3':'#2c3256','--bg4':'#363c66','--border':'#343d62','--border2':'#424e7a','--text':'#e0eaf8','--text2':'#96aac4','--text3':'#647a9a','--accent':'#38bdf8','--accent2':'#0ea5e9'},
+    'high-contrast':{'--bg':'#000000','--bg2':'#0d0d0d','--bg3':'#161616','--bg4':'#202020','--border':'#333333','--border2':'#444444','--text':'#f0f0f0','--text2':'#c0c0c0','--text3':'#888888','--accent':'#facc15','--accent2':'#ca9a00'},
+    'light':{'--bg':'#eef2f8','--bg2':'#ffffff','--bg3':'#e4eaf4','--bg4':'#d4ddef','--border':'#c0cede','--border2':'#a8bad0','--text':'#0e1e34','--text2':'#2e4464','--text3':'#5a7494','--accent':'#0055bb','--accent2':'#003d99'},
+  };
+  var tid = localStorage.getItem('tj_mobile_theme') || 'dark-blue';
+  var vars = THEME_VARS[tid] || THEME_VARS['dark-blue'];
+  var root = document.documentElement;
+  Object.keys(vars).forEach(function(k){ root.style.setProperty(k, vars[k]); });
+  // Theme-color meta
+  var mc = document.querySelector('meta[name="theme-color"]');
+  if(mc) mc.content = vars['--bg'] || '#000';
+})();
+</script>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="s-home" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1">
+    <div class="h-logo" id="logo-main">TradingJournal</div>
+    <div class="h-sub">FUTURES · v2 · MOBILE</div>
+    <div class="h-btns">
+      <div class="hbtn hb-new" onclick="startWizard()">
+        <div class="hb-icon">＋</div>
+        <div><div class="hb-lbl">Nueva Operación</div><div class="hb-sub">Wizard completo + emociones</div></div>
+      </div>
+      <div class="hbtn hb-sec" onclick="goHistory()">
+        <div class="hb-icon">📋</div>
+        <div><div class="hb-lbl">Histórico</div><div class="hb-sub">Ver y editar operaciones</div></div>
+      </div>
+      <div class="hbtn hb-sec" onclick="openCfg()">
+        <div class="hb-icon">⚙️</div>
+        <div><div class="hb-lbl">Configuración</div><div class="hb-sub">URL de Google Sheets</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="h-footer" id="h-status">Sin configurar</div>
+</div>
+
+<!-- WIZARD -->
+<div id="s-wizard" class="screen hidden">
+  <div class="topbar">
+    <div class="btn-back" onclick="wizBack()">←</div>
+    <div class="tb-title" id="wiz-tb">Nueva Operación</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="wiz-cnt"></div>
+  </div>
+  <div class="wiz-dots" id="wiz-dots"></div>
+  <div class="wiz-hdr"><div class="wh-label" id="wh-label"></div><div class="wh-name" id="wh-name"></div></div>
+  <div class="scroll-body pad" id="wiz-body"></div>
+  <div class="wiz-footer">
+    <button class="wbtn wb-p" id="wb-prev" onclick="wizPrev()">← Atrás</button>
+    <button class="wbtn wb-n" id="wb-next" onclick="wizNext()">Siguiente →</button>
+    <button class="wbtn wb-s" id="wb-save" style="display:none" onclick="wizSave()">💾 Guardar</button>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="s-history" class="screen hidden">
+  <div class="topbar">
+    <div class="btn-back" onclick="goScreen('s-home')">←</div>
+    <div class="tb-title">Histórico</div>
+    <div class="tb-action" onclick="loadHistory()">↻ Sync</div>
+  </div>
+  <div class="hf-bar">
+    <div class="hf on" onclick="filterH('all',this)">Todos</div>
+    <div class="hf" onclick="filterH('win',this)">✓ Win</div>
+    <div class="hf" onclick="filterH('loss',this)">✗ Loss</div>
+    <div class="hf" onclick="filterH('today',this)">Hoy</div>
+    <div class="hf" onclick="filterH('week',this)">Semana</div>
+  </div>
+  <div class="scroll-body" id="hist-list" style="padding-top:8px;padding-bottom:20px"></div>
+</div>
+
+<!-- EDIT -->
+<div id="s-edit" class="screen hidden">
+  <div class="topbar">
+    <div class="btn-back" onclick="goScreen('s-history')">←</div>
+    <div class="tb-title" id="edit-title">Editar Trade</div>
+    <div class="tb-action" onclick="editSave()">Guardar</div>
+  </div>
+  <div class="scroll-body pad" id="edit-body"></div>
+</div>
+
+<!-- CONFIG -->
+<div class="bov" id="cfg-ov" onclick="closeCfg()"></div>
+<div class="bsheet" id="cfg-sheet">
+  <div class="bs-title">⚙ CONFIGURACIÓN</div>
+
+  <div class="field">
+    <label class="flabel">Tema de color</label>
+    <div id="theme-picker-area" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px"></div>
+  </div>
+
+  <div style="height:1px;background:var(--border);margin:14px 0"></div>
+
+  <div class="field">
+    <label class="flabel">URL Apps Script (Google Sheets)</label>
+    <input class="finput" type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/..." style="font-size:12px"/>
+  </div>
+  <div class="field">
+    <label class="flabel">Estado</label>
+    <div id="cfg-status" style="font-size:12px;font-family:var(--mono);color:var(--text3)">Sin configurar</div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button class="wbtn wb-p" style="padding:11px" onclick="closeCfg()">Cancelar</button>
+    <button class="wbtn wb-n" style="padding:11px" onclick="saveCfg()">Guardar y sincronizar</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+<div id="emo-tooltip" onclick="hideEmoTooltip()">
+  <div class="et-emoji" id="et-emoji"></div>
+  <div class="et-name" id="et-name"></div>
+  <div class="et-desc" id="et-desc"></div>
+  <div class="et-close">Toca para cerrar</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  EMOCIONES BASE — idénticas al dashboard
+// ══════════════════════════════════════════════════════════
+const EMOCIONES_BASE = [
+  {id:'calma',cat:'pos',emoji:'😌',nombre:'CALMA',desc:'Mente tranquila, sin nervios ni presión',descCorta:'Tranquilo, sin tensión'},
+  {id:'paciencia',cat:'pos',emoji:'🧘',nombre:'PACIENCIA',desc:'Esperas el momento correcto sin forzar',descCorta:'Esperé mi nivel'},
+  {id:'confianza',cat:'pos',emoji:'💪',nombre:'CONFIANZA',desc:'Crees en tu análisis y en tu sistema',descCorta:'Confiaba en mi sistema'},
+  {id:'claridad',cat:'pos',emoji:'🎯',nombre:'CLARIDAD',desc:'El setup es claro, sin ambigüedades',descCorta:'Setup perfectamente claro'},
+  {id:'objetividad',cat:'pos',emoji:'⚖️',nombre:'OBJETIVIDAD',desc:'Juzgas el mercado sin sesgos emocionales',descCorta:'Juzgué sin sesgo'},
+  {id:'disciplina',cat:'pos',emoji:'🏋️',nombre:'DISCIPLINA',desc:'Sigues el plan sin desviarte',descCorta:'Seguí el plan'},
+  {id:'control',cat:'pos',emoji:'🎮',nombre:'CONTROL',desc:'Dominas la gestión del trade',descCorta:'Yo dirigí las decisiones'},
+  {id:'autocontrol',cat:'pos',emoji:'🔒',nombre:'AUTOCONTROL',desc:'No reaccionas impulsivamente al precio',descCorta:'Frené el impulso'},
+  {id:'conviccion2',cat:'pos',emoji:'🦁',nombre:'CONVICCIÓN',desc:'Entras con determinación en el setup',descCorta:'Entré con determinación'},
+  {id:'sintonia',cat:'pos',emoji:'🎵',nombre:'SINTONÍA',desc:'En armonía con el movimiento del mercado',descCorta:'Leí bien el mercado'},
+  {id:'seguridad',cat:'pos',emoji:'🛡️',nombre:'SEGURIDAD',desc:'Protegido por tu gestión de riesgo',descCorta:'Tenía plan para todo'},
+  {id:'eficiencia',cat:'pos',emoji:'⚡',nombre:'EFICIENCIA',desc:'Ejecutas sin dudas ni demoras',descCorta:'Cada acción con propósito'},
+  {id:'serenidad',cat:'pos',emoji:'🌊',nombre:'SERENIDAD',desc:'Aceptas el resultado con ecuanimidad',descCorta:'Acepté lo que pasó'},
+  {id:'prudencia',cat:'pos',emoji:'🦉',nombre:'PRUDENCIA',desc:'Calibras bien el riesgo antes de actuar',descCorta:'Calibré bien el riesgo'},
+  {id:'satisfaccion',cat:'pos',emoji:'😊',nombre:'SATISFACCIÓN',desc:'Contento con tu proceso, ganes o no',descCorta:'Contento con mi proceso'},
+  {id:'tranquilidad',cat:'pos',emoji:'☮️',nombre:'TRANQUILIDAD',desc:'Sin agitación interna tras el resultado',descCorta:'En paz con el resultado'},
+  {id:'aceptacion',cat:'pos',emoji:'🤝',nombre:'ACEPTACIÓN',desc:'Aceptas pérdida o ganancia sin resistencia',descCorta:'Acepté sin resistencia'},
+  {id:'realizacion',cat:'pos',emoji:'🌟',nombre:'REALIZACIÓN',desc:'Sientes que has operado como deberías',descCorta:'Fui el trader que quiero ser'},
+  {id:'afirmacion',cat:'pos',emoji:'✅',nombre:'AFIRMACIÓN',desc:'Refuerzas tu confianza con este trade',descCorta:'El trade me reforzó'},
+  {id:'desapego',cat:'pos',emoji:'🍃',nombre:'DESAPEGO',desc:'No te aferras al dinero ni al resultado',descCorta:'Sin apego al resultado'},
+  {id:'ansiedad',cat:'neg',emoji:'😰',nombre:'ANSIEDAD',desc:'Nervios excesivos, anticipas el peor escenario',descCorta:'Tenso, nervioso'},
+  {id:'impaciencia',cat:'neg',emoji:'⏰',nombre:'IMPACIENCIA',desc:'Quieres que el trade se mueva ya',descCorta:'Entré antes de tiempo'},
+  {id:'desconfianza',cat:'neg',emoji:'🤔',nombre:'DESCONFIANZA',desc:'Dudas de tu sistema o del setup',descCorta:'Dudé de mi análisis'},
+  {id:'duda',cat:'neg',emoji:'❓',nombre:'DUDA',desc:'No estás seguro de si entrar o no',descCorta:'Criterios ambiguos'},
+  {id:'sesgo',cat:'neg',emoji:'🎭',nombre:'SESGO',desc:'Ves el mercado como quieres verlo',descCorta:'Vi lo que quería ver'},
+  {id:'descontrol',cat:'neg',emoji:'💥',nombre:'DESCONTROL',desc:'Pierdes el hilo de tu plan',descCorta:'Actué fuera del plan'},
+  {id:'rabia',cat:'neg',emoji:'😡',nombre:'RABIA',desc:'Enfado por el movimiento del precio',descCorta:'Sentí ira o frustración'},
+  {id:'impulsividad',cat:'neg',emoji:'⚡',nombre:'IMPULSIVIDAD',desc:'Actúas sin pensar, sin esperar confirmación',descCorta:'Actué sin pensar'},
+  {id:'venganza',cat:'neg',emoji:'🗡️',nombre:'VENGANZA',desc:'Operas para recuperar lo perdido',descCorta:'Quería recuperar lo perdido'},
+  {id:'confusion',cat:'neg',emoji:'😵',nombre:'CONFUSIÓN',desc:'No entiendes qué está haciendo el mercado',descCorta:'El mercado no tenía sentido'},
+  {id:'frustracion',cat:'neg',emoji:'😤',nombre:'FRUSTRACIÓN',desc:'El mercado no hace lo que esperabas',descCorta:'El mercado no cooperó'},
+  {id:'ineficacia',cat:'neg',emoji:'❌',nombre:'INEFICACIA',desc:'Sientes que estás operando mal',descCorta:'Nada producía el efecto esperado'},
+  {id:'temor_miedo',cat:'neg',emoji:'😨',nombre:'MIEDO',desc:'Miedo a perder que paraliza tu ejecución',descCorta:'El miedo guió mis decisiones'},
+  {id:'codicia',cat:'neg',emoji:'🤑',nombre:'CODICIA',desc:'Quieres más de lo que el setup ofrece',descCorta:'Quise exprimir más'},
+  {id:'insatisfaccion',cat:'neg',emoji:'😞',nombre:'INSATISFACCIÓN',desc:'Descontento con el resultado aunque hayas seguido el plan',descCorta:'Descontento con el resultado'},
+  {id:'hostilidad',cat:'neg',emoji:'😠',nombre:'HOSTILIDAD',desc:'Sientes el mercado como un enemigo',descCorta:'El mercado como enemigo'},
+  {id:'verguenza',cat:'neg',emoji:'😳',nombre:'VERGÜENZA',desc:'Te avergüenza haber tomado esa decisión',descCorta:'Me avergoncé de la operación'},
+  {id:'autoengano',cat:'neg',emoji:'🙈',nombre:'AUTOENGAÑO',desc:'Te convences de que está bien cuando no lo está',descCorta:'Me convencí de que estaba bien'},
+  {id:'fatalismo',cat:'neg',emoji:'💀',nombre:'FATALISMO',desc:'Crees que todo va a salir mal',descCorta:'Convencido de que saldría mal'},
+  {id:'pesimismo',cat:'neg',emoji:'⬇️',nombre:'PESIMISMO',desc:'Visión negativa antes de que ocurra',descCorta:'Visión negativa antes de actuar'},
+  {id:'temeridad',cat:'neg',emoji:'🎲',nombre:'TEMERIDAD',desc:'Arriesgas más de lo que deberías',descCorta:'Arriesgué de más'},
+  {id:'avaricia',cat:'neg',emoji:'💰',nombre:'AVARICIA',desc:'No cierras aunque el objetivo está cumplido',descCorta:'No cerré cuando debía'},
+  {id:'perfeccionismo',cat:'neg',emoji:'📐',nombre:'PERFECCIONISMO',desc:'Nunca es suficientemente bueno el setup',descCorta:'Nunca era suficientemente bueno'},
+  {id:'simpatia',cat:'neu',emoji:'😄',nombre:'SIMPATÍA',desc:'Disposición positiva neutra',descCorta:'Estado positivo neutro'},
+  {id:'optimismo',cat:'neu',emoji:'🌈',nombre:'OPTIMISMO',desc:'Expectativa positiva sobre el resultado',descCorta:'Visión positiva del resultado'},
+];
+
+// Array mutable — se añaden emociones custom desde Sheets
+let EMOCIONES = [...EMOCIONES_BASE];
+
+// ══════════════════════════════════════════════════════════
+//  FASES DEFAULT — idénticas al dashboard
+// ══════════════════════════════════════════════════════════
+const FASES_DEFAULT = [
+
+  // ══════════════════════════════════════════════════════════
+  //  WIZPASO 0 — F01: Estado físico y mental previo a la sesión
+  // ══════════════════════════════════════════════════════════
+  { id:'f01', orden:1, wizPaso:0,
+    nombre:'Estado previo para operar',
+    grupos: [],
+    preguntas:[
+      { id:'q_semaforo', tipo:'semaforo',
+        texto:'¿En qué estado llegas hoy a la sesión?',
+        campo:'estadoPrevio',
+        opciones:[
+          {val:'bien',    label:'Estoy bien',        sub:'Descansado, enfocado, con plan',    col:'#00e676', accion:'Operar'},
+          {val:'regular', label:'Estoy regular',      sub:'Algo me pesa pero puedo operar',   col:'#ffd740', accion:'Con precaución'},
+          {val:'mal',     label:'No debería operar',  sub:'Cansado, ansioso o con problemas', col:'#ff3d3d', accion:'No operar'},
+        ]
+      },
+      { id:'q_sueno', tipo:'seleccion',
+        texto:'¿Cómo has dormido esta noche?',
+        campo:'calidadSueno',
+        opciones:[
+          {val:'bien',     label:'Bien',          sub:'Más de 7h, descansado',        col:'#00e676'},
+          {val:'regular',  label:'Regular',        sub:'4-6h o sueño interrumpido',   col:'#ffd740'},
+          {val:'mal',      label:'Mal',            sub:'Menos de 4h o muy agitado',   col:'#ff3d3d'},
+        ]
+      },
+      { id:'q_distracciones', tipo:'sino',
+        texto:'¿Hay algo fuera del trading ocupando tu mente ahora mismo?',
+        campo:'hayDistracciones',
+        opSi:'Sí, tengo algo en la cabeza',
+        opNo:'No, estoy centrado'
+      },
+      { id:'q_plan_sesion', tipo:'sino',
+        texto:'¿Tienes un plan claro para hoy con niveles, sesgo y condición mínima para operar?',
+        campo:'tienePlanSesion',
+        opSi:'Sí, tengo plan definido',
+        opNo:'No lo he preparado'
+      },
+      { id:'q_racha', tipo:'seleccion',
+        texto:'¿Cómo cerraste la última sesión?',
+        campo:'rachaPrev',
+        opciones:[
+          {val:'positiva',  label:'Bien',       sub:'Racha positiva o break even',   col:'#00e676'},
+          {val:'neutral',   label:'Neutral',     sub:'Sin sesión o irrelevante',      col:'#ffd740'},
+          {val:'negativa',  label:'Mal',         sub:'Pérdidas o sesión frustrante',  col:'#ff3d3d'},
+        ]
+      },
+    ]
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  WIZPASO 1 — F02: Emociones previas + convicción de entrada
+  // ══════════════════════════════════════════════════════════
+  { id:'f02', orden:2, wizPaso:1,
+    nombre:'Actitud de entrada',
+    grupos: [
+      { pos:'calma', neg:'ansiedad', pregunta:'¿Llegaste tranquilo o con tensión antes de entrar?' },
+      { pos:'paciencia', neg:'impaciencia', pregunta:'¿Esperaste a tu nivel o tuviste que frenarte para no entrar antes?' },
+      { pos:'confianza', neg:'desconfianza', pregunta:'¿Confiabas en tu sistema o algo te hacía dudar?' },
+      { pos:'claridad', neg:'duda', pregunta:'¿El setup era claro o tenías dudas sobre si cumplía criterios?' },
+      { pos:'objetividad', neg:'sesgo', pregunta:'¿Juzgaste el mercado con objetividad o veías lo que querías ver?' },
+    ],
+    preguntas:[
+      { id:'q_conviccion', tipo:'seleccion',
+        texto:'¿Con qué convicción entras en este trade?',
+        campo:'conviccion',
+        opciones:[
+          {val:'alta',    label:'Alta',    sub:'El setup es perfecto',  col:'#00e676'},
+          {val:'media',   label:'Media',   sub:'Cumple los criterios',  col:'#ffd740'},
+          {val:'baja',    label:'Baja',    sub:'Tengo dudas',           col:'#ff9800'},
+          {val:'forzada', label:'Forzada', sub:'No sé por qué entro',   col:'#ff3d3d'},
+        ]
+      },
+      { id:'q_motivo_entrada', tipo:'sino',
+        texto:'¿Entras porque el mercado lo pide o porque llevas rato sin operar?',
+        campo:'entradaPorMercado',
+        opSi:'El mercado da la señal',
+        opNo:'Llevo rato sin operar'
+      },
+      { id:'q_riesgo_aceptado', tipo:'sino',
+        texto:'¿Has aceptado mentalmente la pérdida del stop ANTES de ejecutar?',
+        campo:'riesgoAceptado',
+        opSi:'Sí, el riesgo está aceptado',
+        opNo:'Todavía no lo tengo claro'
+      },
+    ]
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  WIZPASO 2 — F03: Emociones en ejecución + disciplina del stop
+  // ══════════════════════════════════════════════════════════
+  { id:'f03', orden:3, wizPaso:2,
+    nombre:'Ejecución',
+    grupos: [
+      { pos:'disciplina', neg:'descontrol', pregunta:'¿Seguiste el plan al pie de la letra o se te fue de las manos?' },
+      { pos:'control', neg:'rabia', pregunta:'¿Dirigiste las decisiones o reaccionaste emocionalmente?' },
+      { pos:'autocontrol', neg:'impulsividad', pregunta:'¿Frenaste los impulsos o actuaste sin pensar?' },
+      { pos:'conviccion2', neg:'venganza', pregunta:'¿Entraste con determinación o querías recuperar algo perdido?' },
+    ],
+    preguntas:[
+      { id:'q_moviStop', tipo:'sino',
+        texto:'¿Moví el stop una vez dentro del trade?',
+        campo:'moviStop',
+        opSi:'Sí, lo moví',
+        opNo:'No lo toqué'
+      },
+      { id:'q_motivo_stop', tipo:'seleccion',
+        texto:'Si moviste el stop, ¿fue por razón técnica o emocional?',
+        campo:'motivoMoveStop',
+        opciones:[
+          {val:'no_movi',   label:'No lo moví',     sub:'Mantuve el plan',                 col:'#00e676'},
+          {val:'tecnico',   label:'Técnico',         sub:'Nuevo nivel o estructura válida', col:'#ffd740'},
+          {val:'emocional', label:'Emocional',       sub:'Miedo a perder o codicia',        col:'#ff3d3d'},
+        ]
+      },
+      { id:'q_tamano_cambiado', tipo:'sino',
+        texto:'¿Añadiste o redujiste tamaño dentro del trade fuera del plan?',
+        campo:'tambioCambiado',
+        opSi:'Sí, cambié el tamaño',
+        opNo:'Mantuve el tamaño'
+      },
+      { id:'q_ansiedad_fisica', tipo:'puntuacion',
+        texto:'¿Cuánta tensión física notaste mientras el trade estaba abierto? (0 = ninguna, 5 = mucha)',
+        campo:'ansiedadFisica',
+        max:5
+      },
+    ]
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  WIZPASO 2 — F04: Emociones aguantando el trade
+  // ══════════════════════════════════════════════════════════
+  { id:'f04', orden:4, wizPaso:2,
+    nombre:'Gestión del trade',
+    grupos: [
+      { pos:'sintonia', neg:'confusion', pregunta:'¿El mercado tenía sentido o no entendías lo que hacía?' },
+      { pos:'seguridad', neg:'frustracion', pregunta:'¿Tenías plan para cada escenario o el mercado te sorprendió?' },
+      { pos:'eficiencia', neg:'ineficacia', pregunta:'¿Cada acción tenía propósito o sentías que nada funcionaba?' },
+      { pos:'serenidad', neg:'temor_miedo', pregunta:'¿Aceptaste lo que pasó o el miedo guió tus decisiones?' },
+      { pos:'prudencia', neg:'codicia', pregunta:'¿Calibraste bien el riesgo o quisiste exprimir más de lo previsto?' },
+    ],
+    preguntas:[
+      { id:'q_cierre_antes', tipo:'sino',
+        texto:'¿Cerraste antes de que el precio llegara al objetivo?',
+        campo:'cerreAntes',
+        opSi:'Sí, cerré antes',
+        opNo:'Dejé correr hasta el objetivo'
+      },
+      { id:'q_motivo_cierre_antes', tipo:'seleccion',
+        texto:'Si cerraste antes del objetivo, ¿por qué?',
+        campo:'motivoCierreAntes',
+        opciones:[
+          {val:'no_cerré',    label:'No cerré antes',       sub:'Llegué al objetivo',             col:'#00e676'},
+          {val:'estructura',  label:'Estructura técnica',   sub:'El mercado invalidó el setup',   col:'#ffd740'},
+          {val:'miedo',       label:'Miedo a perder',       sub:'Quería asegurar sin razón clara', col:'#ff3d3d'},
+          {val:'codicia_inv', label:'Codicia inversa',      sub:'Quité riesgo por nervios',        col:'#ff9800'},
+        ]
+      },
+    ]
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  WIZPASO 3 — F05: Resultado emocional inmediato al cerrar
+  // ══════════════════════════════════════════════════════════
+  { id:'f05', orden:5, wizPaso:3,
+    nombre:'Resultado emocional',
+    grupos: [
+      { pos:'satisfaccion', neu:'simpatia',  neg:'insatisfaccion' },
+      { pos:'tranquilidad', neg:'hostilidad', pregunta:'¿En paz con lo ocurrido o sentiste el mercado como enemigo?' },
+      { pos:'aceptacion', neg:'verguenza', pregunta:'¿Aceptaste el resultado sin resistencia o con vergüenza?' },
+      { pos:'objetividad', neg:'autoengano', pregunta:'¿Evaluaste el trade con honestidad o te convenciste de que estaba bien?' },
+    ],
+    preguntas:[
+      { id:'q_orgullo_proceso', tipo:'seleccion',
+        texto:'¿Cómo te sientes con el proceso, independientemente del P&L?',
+        campo:'orgulloProceso',
+        opciones:[
+          {val:'orgulloso',   label:'Orgulloso',       sub:'Seguí el plan perfectamente',      col:'#00e676'},
+          {val:'aceptable',   label:'Aceptable',        sub:'Hubo algún desvío menor',          col:'#ffd740'},
+          {val:'mejorable',   label:'Mejorable',        sub:'Me alejé del plan en algún punto', col:'#ff9800'},
+          {val:'fallé',       label:'Fallé el proceso', sub:'Actué por impulso o sin criterio', col:'#ff3d3d'},
+        ]
+      },
+      { id:'q_revenge', tipo:'sino',
+        texto:'¿Tienes ganas de abrir otro trade ahora mismo para recuperar?',
+        campo:'quiereRevenge',
+        opSi:'Sí, quiero recuperar',
+        opNo:'No, estoy tranquilo'
+      },
+    ]
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  WIZPASO 3 — F06: Reflexión profunda y aprendizaje
+  // ══════════════════════════════════════════════════════════
+  { id:'f06', orden:6, wizPaso:3,
+    nombre:'Reflexión',
+    grupos: [
+      { pos:'realizacion',  neu:'optimismo',  neg:'fatalismo'       },
+      { pos:'realizacion', neg:'pesimismo', pregunta:'¿El proceso te reforzó o te quedas con visión negativa?' },
+      { pos:'afirmacion', neg:'temeridad', pregunta:'¿Este trade refuerza tu confianza o asumiste más riesgo del justificado?' },
+      { pos:'desapego', neg:'avaricia', pregunta:'¿Te desapegaste del resultado o no cerraste cuando debías?' },
+      { pos:'prudencia', neg:'perfeccionismo', pregunta:'¿Calibraste bien o el perfeccionismo te impidió ejecutar?' },
+    ],
+    preguntas:[
+      { id:'q_nota', tipo:'puntuacion',
+        texto:'Nota del proceso (independiente del P&L)',
+        campo:'notaProceso',
+        max:5
+      },
+      { id:'q_sesgo_cognitivo', tipo:'seleccion',
+        texto:'¿Qué sesgo cognitivo influyó más en este trade?',
+        campo:'sesgoCognitivo',
+        opciones:[
+          {val:'ninguno',      label:'Ninguno',          sub:'Decisión puramente técnica',              col:'#00e676'},
+          {val:'confirmacion', label:'Confirmación',      sub:'Busqué señales que confirmasen mi sesgo', col:'#ffd740'},
+          {val:'recencia',     label:'Recencia',          sub:'El trade anterior influyó demasiado',     col:'#ff9800'},
+          {val:'aversion',     label:'Aversión pérdida',  sub:'El miedo a perder guió las decisiones',  col:'#ff3d3d'},
+          {val:'sobreconfi',   label:'Sobreconfianza',    sub:'Asumí más riesgo del justificado',        col:'#ff9800'},
+        ]
+      },
+      { id:'q_proxima_vez', tipo:'texto',
+        texto:'¿Qué harías diferente la próxima vez que aparezca exactamente este setup?',
+        campo:'proximaVez'
+      },
+      { id:'q_aprendizaje', tipo:'texto',
+        texto:'¿Qué aprendes de este trade? (opcional)',
+        campo:'aprendizaje'
+      },
+    ]
+  },
+];
+
+// ──────────────────────────────────────────────────────────
+//  $/punto por instrumento — valores reales
+// ──────────────────────────────────────────────────────────
+const DPP = {ES:50, MES:5, NQ:20, MNQ:2};
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let API_URL = localStorage.getItem('tj_mobile_url') || '';
+let allTrades = [], histFilter = 'all', currentEditIdx = null;
+let wizStep = 0, tradeData = {}, emoData = {}, pillState = {};
+let editEmoData = {}, editTab = 0, editSnapshot = {};
+
+const DROPDOWN_DEFAULTS = {
+  condicionMercado: ['Trending','Ranging','Alta volatilidad','Noticias/Evento','Apertura limpia','Rango estrecho'],
+  sesion:           ['RTH Open','Midday','Power Hour','RTH Close','Globex','ETH'],
+  planSeguido:      ['Sí','No','Parcialmente'],
+  tf:               ['1min','2min','3min','5min','15min','30min','1H','Multi-TF'],
+  tipoEntrada:      ['Sí','No'],
+  modeloEntrada:    ['Sí','No'],
+};
+
+let CFG = {
+  setups:    [],
+  dropdowns: {},
+  fases:     JSON.parse(JSON.stringify(FASES_DEFAULT)),
+  cuentas:   [],
+  propfirms: [],   // [{id, name, comisiones:{ES,MES,NQ,MNQ}}]
+  loaded:    false,
+};
+
+function getDDOpts(key){
+  const opts = CFG.dropdowns[key];
+  return (opts && opts.length) ? opts : (DROPDOWN_DEFAULTS[key] || []);
+}
+function getSetups(){
+  return CFG.setups.length ? CFG.setups : [{id:'default',name:'Sin setup',color:'#888'}];
+}
+function getCuentas(){
+  return CFG.cuentas.length ? CFG.cuentas : [];
+}
+function getComisionForCuenta(cuentaNombre, instrKey){
+  const pf = CFG.propfirms.find(p=>p.name===cuentaNombre);
+  if(!pf) return null;
+  return pf.comisiones?.[instrKey] ?? null;
+}
+
+// ══════════════════════════════════════════════════════════
+//  PARSE CONFIG desde Sheets — igual que applyConfigRows dashboard
+// ══════════════════════════════════════════════════════════
+function parseConfig(rows){
+  CFG.setups    = [];
+  CFG.dropdowns = {};
+  CFG.cuentas   = [];
+  CFG.propfirms = [];
+
+  const setupMap   = {};
+  const dropItems  = {};
+  const propMap    = {};
+  const emoMap     = {};
+  const faseMap    = {};
+
+  rows.forEach(r => {
+    const tipo = r[0], col1 = r[1], col2 = r[2], col3 = r[3], col4 = r[4];
+
+    // ── SETUPS
+    if(tipo === 'setup'){
+      if(!setupMap[col2]) setupMap[col2] = {id:col2};
+      if(col3 === 'name')       setupMap[col2].name       = col4;
+      else if(col3 === 'color') setupMap[col2].color      = col4;
+      else if(col3 === 'abbr')  setupMap[col2].abbr       = col4;
+      else setupMap[col2][col3] = col4;
+    }
+
+    // ── DROPDOWNS
+    if(tipo === 'dropdown' && col3 === 'value'){
+      if(!dropItems[col1]) dropItems[col1] = [];
+      dropItems[col1][parseInt(col2)] = col4;
+    }
+
+    // ── PROP FIRMS (cuentas)
+    if(tipo === 'propfirm'){
+      if(!propMap[col2]) propMap[col2] = {id:col2, comisiones:{}};
+      if(col3 === 'name') propMap[col2].name = col4;
+      else if(col3.startsWith('com_')){
+        const instrKey = col3.replace('com_','');
+        const n = parseFloat(col4);
+        if(!isNaN(n) && n > 0) propMap[col2].comisiones[instrKey] = n;
+      } else {
+        propMap[col2][col3] = col4;
+      }
+    }
+
+    // ── EMOCIONES CUSTOM
+    if(tipo === 'custom_emo'){
+      if(!emoMap[col2]) emoMap[col2] = {id:col2, custom:true, senales:[], impacto:''};
+      emoMap[col2][col3] = col4;
+    }
+
+    // ── FASES
+    if(tipo === 'fase'){
+      const faseId = col1, faseCampo = col2, faseValor = col4;
+      if(!faseMap[faseId]) faseMap[faseId] = {};
+      faseMap[faseId][faseCampo] = faseValor;
+    }
+
+    // ── AJUSTES (logo)
+    if(tipo === 'ajuste' && col1 === 'logo'){
+      if(col2 === 'logoMain'){
+        const el = document.getElementById('logo-main');
+        if(el && col4) el.textContent = col4;
+      }
+    }
+  });
+
+  // Aplicar setups
+  const loadedSetups = Object.values(setupMap).filter(s=>s.name);
+  if(loadedSetups.length) CFG.setups = loadedSetups;
+
+  // Aplicar dropdowns
+  Object.keys(dropItems).forEach(lista=>{
+    const items = dropItems[lista].filter(x=>x!==undefined&&x!=='');
+    if(items.length) CFG.dropdowns[lista] = items;
+  });
+
+  // Aplicar propfirms y cuentas
+  CFG.propfirms = Object.values(propMap).filter(p=>p.name);
+  CFG.cuentas   = CFG.propfirms.map(p=>p.name);
+
+  // Aplicar emociones custom — añadir a EMOCIONES si no están
+  const loadedEmos = Object.values(emoMap).filter(e=>e.nombre);
+  loadedEmos.forEach(e=>{
+    if(!EMOCIONES.find(x=>x.id===e.id)){
+      EMOCIONES.push({
+        id:      e.id,
+        cat:     e.cat || 'neu',
+        emoji:   e.emoji || '💡',
+        nombre:  (e.nombre||'').toUpperCase(),
+        desc:    e.desc || '',
+        pregunta:e.pregunta || '',
+        accion:  e.accion || '',
+        senales: [],
+        impacto: '',
+        custom:  true,
+      });
+    }
+  });
+
+  // Aplicar fases — merge con FASES_DEFAULT
+  const faseIds = Object.keys(faseMap);
+  if(faseIds.length > 0){
+    const rebuilt = faseIds.map(id=>{
+      const f    = faseMap[id];
+      const base = FASES_DEFAULT.find(fd=>fd.id===id) || {};
+      let preguntas = base.preguntas ? JSON.parse(JSON.stringify(base.preguntas)) : [];
+      let grupos    = base.grupos    ? JSON.parse(JSON.stringify(base.grupos))    : [];
+      try{ if(f.preguntas) preguntas = JSON.parse(f.preguntas); }catch(_){}
+      try{ if(f.grupos)    grupos    = JSON.parse(f.grupos);    }catch(_){}
+      let wizPaso = base.wizPaso || 0;
+      if(f.wizPaso !== undefined){ const v=parseInt(f.wizPaso); if(!isNaN(v)) wizPaso=v; }
+      return { id, wizPaso, nombre: f.nombre||base.nombre||id, preguntas, grupos,
+               orden: parseInt(f.orden)||base.orden||0 };
+    }).sort((a,b)=>a.orden-b.orden);
+
+    // Añadir fases default que no vengan de Sheets
+    FASES_DEFAULT.forEach(fd=>{
+      if(!rebuilt.find(r=>r.id===fd.id)) rebuilt.push(JSON.parse(JSON.stringify(fd)));
+    });
+
+    CFG.fases = rebuilt.sort((a,b)=>a.orden-b.orden);
+  } else {
+    CFG.fases = JSON.parse(JSON.stringify(FASES_DEFAULT));
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2,'0');
+const gv = id => { const e=$(id); return e?e.value:''; };
+const emoById = id => EMOCIONES.find(e=>e.id===id);
+
+function showLoad(){ $('overlay').classList.add('show'); }
+function hideLoad(){ $('overlay').classList.remove('show'); }
+function toast(msg, type='ok'){
+  const t=$('toast'); t.textContent=msg; t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  $(id).classList.remove('hidden');
+}
+
+function normDate(d){
+  if(d===null||d===undefined||d==='') return '';
+  const s=String(d).trim();
+  if(!s) return '';
+  // ISO con o sin timestamp: 2026-05-21 o 2026-05-21T16:20:00
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  // DD/MM/YYYY
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)){
+    const p=s.split('/'); return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+  }
+  // DD-MM-YYYY
+  if(/^\d{1,2}-\d{1,2}-\d{4}$/.test(s)){
+    const p=s.split('-'); return p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+  }
+  // Número serial Excel (>40000)
+  if(/^\d{5}$/.test(s)){
+    const dt=new Date((parseInt(s)-25569)*86400000);
+    return dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0')+'-'+String(dt.getUTCDate()).padStart(2,'0');
+  }
+  return s;
+}
+function displayDate(d){
+  if(d===null||d===undefined) return '';
+  const s=String(d).trim();
+  if(!s) return '';
+  const n=normDate(s);
+  if(!n) return s;
+  const p=n.split('-');
+  if(p.length!==3||p[0].length!==4) return s;
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+// Normaliza hora desde HH:MM, HH:MM:SS, o fracción decimal de Sheets
+function normHora(h){
+  if(h===null||h===undefined||h==='') return '';
+  const s=String(h).trim();
+  if(/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) return s;
+  const f=parseFloat(s);
+  if(!isNaN(f)&&f>=0&&f<1){
+    const t=Math.round(f*86400);
+    return String(Math.floor(t/3600)).padStart(2,'0')+':'+String(Math.floor((t%3600)/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+  }
+  return s;
+}
+
+// ── Custom date/time pickers (sin type=date/time para evitar saltos en Firefox/Chrome mobile) ──
+function buildDatePicker(containerId, isoValue, onchange){
+  const c = document.getElementById(containerId);
+  if(!c) return;
+  const inp = document.createElement('input');
+  inp.className = 'finput';
+  inp.id = containerId + '-val';
+  inp.type = 'date';
+  inp.autocomplete = 'off';
+  inp.value = isoValue || '';
+  inp.addEventListener('focus', _freezeScroll);
+  inp.addEventListener('blur', function(){
+    _thawScroll();
+    if(onchange && inp.value) onchange(inp.value);
+  });
+  inp.addEventListener('change', function(){
+    if(onchange && inp.value) onchange(inp.value);
+  });
+  c.appendChild(inp);
+}
+function getDatePickerValue(containerId){
+  const el = document.getElementById(containerId+'-val');
+  if(!el) return '';
+  return el.value || '';
+}
+// Fix anti-salto para pickers nativos en Firefox/Chrome mobile:
+// congela el scroll del body mientras el picker está abierto
+function _freezeScroll(){
+  const sy = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = '-'+sy+'px';
+  document.body.style.width = '100%';
+  document.body._frozenY = sy;
+}
+function _thawScroll(){
+  const sy = document.body._frozenY || 0;
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  window.scrollTo(0, sy);
+}
+
+function buildTimePicker(containerId, hhmmssValue, required, onchange){
+  const c = document.getElementById(containerId);
+  if(!c) return;
+  const inp = document.createElement('input');
+  inp.className = 'finput';
+  inp.id = containerId + '-val';
+  inp.type = 'time';
+  inp.step = '1'; // incluye segundos
+  inp.autocomplete = 'off';
+  // Convertir HH:MM:SS → HH:MM:SS (time input acepta ese formato)
+  inp.value = hhmmssValue || '';
+  inp.addEventListener('focus', _freezeScroll);
+  inp.addEventListener('blur', function(){
+    _thawScroll();
+    if(onchange && inp.value) onchange(inp.value);
+  });
+  inp.addEventListener('change', function(){
+    if(onchange && inp.value) onchange(inp.value);
+  });
+  c.appendChild(inp);
+  if(required){
+    const hint = document.createElement('div');
+    hint.className = 'dt-req-hint';
+    hint.id = containerId+'-hint';
+    hint.textContent = '⚠ Introduce la hora antes de guardar';
+    c.appendChild(hint);
+  }
+}
+function getTimePickerValue(containerId){
+  const el = document.getElementById(containerId+'-val');
+  if(!el) return '';
+  const v = el.value.trim();
+  if(!v) return '';
+  // Normalizar a HH:MM:SS
+  if(/^\d{2}:\d{2}:\d{2}$/.test(v)) return v;
+  if(/^\d{2}:\d{2}$/.test(v)) return v+':00';
+  return '';
+}
+function timePickerFilled(containerId){
+  return getTimePickerValue(containerId) !== '';
+}
+
+function mkOpts(items, cur, empty='—'){
+  const c=String(cur||'').trim();
+  return `<option value="">${empty}</option>`+items.map(v=>`<option value="${v}"${String(v).trim()===c?' selected':''}>${v}</option>`).join('');
+}
+function mkOptsObj(items, cur, empty='— Sin setup —'){
+  const c=String(cur||'').trim();
+  return `<option value="">${empty}</option>`+items.map(s=>`<option value="${s.name}"${String(s.name).trim()===c?' selected':''}>${s.name}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════
+async function loadConfig(){
+  if(!API_URL) return;
+  try{
+    const data = await fetchGET(API_URL,{action:'getConfigRows'});
+    if(data.status==='ok' && data.rows){
+      // Resetear EMOCIONES a base antes de añadir custom
+      EMOCIONES = [...EMOCIONES_BASE];
+      parseConfig(data.rows);
+      CFG.loaded=true;
+      updStatus();
+    }
+  } catch(e){ console.warn('loadConfig:',e.message); }
+}
+
+function openCfg(){
+  $('cfg-url').value=API_URL||'';
+  setTimeout(renderThemePicker, 50);
+  $('cfg-status').textContent=API_URL?(CFG.loaded?'🟢 Conectado':'🟡 Sin sincronizar'):'⚪ Sin configurar';
+  $('cfg-ov').classList.add('show');
+  $('cfg-sheet').classList.add('show');
+}
+function closeCfg(){
+  $('cfg-ov').classList.remove('show');
+  $('cfg-sheet').classList.remove('show');
+}
+async function saveCfg(){
+  API_URL=($('cfg-url').value||'').trim();
+  localStorage.setItem('tj_mobile_url',API_URL);
+  $('cfg-status').textContent='⏳ Sincronizando...';
+  await loadConfig();
+  $('cfg-status').textContent=CFG.loaded?'🟢 Conectado':'🔴 Error';
+  toast(CFG.loaded?'✓ Config sincronizada':'Error al conectar', CFG.loaded?'ok':'err');
+}
+function updStatus(){
+  $('h-status').textContent=API_URL?(CFG.loaded?'🟢 Sheets conectado':'🟡 URL guardada'):'⚪ Sin configurar';
+}
+
+// ══════════════════════════════════════════════════════════
+//  PILLS
+// ══════════════════════════════════════════════════════════
+function makePillsWithVal(cid, key, currentVal){
+  const val=currentVal||pillState[key]||'';
+  pillState[key]=val;
+  const w=$(cid); if(!w) return;
+  w.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.dataset.val===val));
+  w.onclick=e=>{
+    const p=e.target.closest('.pill'); if(!p) return;
+    pillState[key]=p.dataset.val;
+    w.querySelectorAll('.pill').forEach(pp=>pp.classList.remove('on'));
+    p.classList.add('on');
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+//  WIZARD
+// ══════════════════════════════════════════════════════════
+const WIZ = [
+  {label:'PASO 1 · TRADE',     name:'Datos básicos',         render:rDatos},
+  {label:'PASO 2 · EMOCIONES', name:'Estado previo',          render:rEmo0},
+  {label:'PASO 3 · EMOCIONES', name:'Antes del trade',        render:rEmo1},
+  {label:'PASO 4 · TRADE',     name:'Ejecución',              render:rEjecucion},
+  {label:'PASO 5 · TRADE',     name:'Contexto & Setup',       render:rContexto},
+  {label:'PASO 6 · EMOCIONES', name:'Durante el trade',       render:rEmo2},
+  {label:'PASO 7 · EMOCIONES', name:'Cierre & Reflexión',     render:rEmo3},
+  {label:'PASO 8 · TRADE',     name:'Resultado & Disciplina', render:rResultado},
+];
+
+
+// ── Genera ID desde fecha + hora de entrada (YYYYMMDDHHMMSS) ─────────────
+function calcIdMobile() {
+  const dateVal = getDatePickerValue('fp-fecha') || (tradeData.fecha || new Date().toISOString().split('T')[0]);
+  const timeVal = getTimePickerValue('fp-hin') || getTimePickerValue('fp-hin2') || '';
+  if (!timeVal) { tradeData._pendingId = ''; return; } // hora no introducida aún
+  const d = dateVal.replace(/-/g,'');
+  const h = timeVal.replace(/:/g,'').padEnd(6,'0');
+  tradeData._pendingId = d + h;
+}
+
+async function startWizard(){
+  if(!CFG.loaded && API_URL){ showLoad(); try{await loadConfig();}catch(_){} hideLoad(); }
+  wizStep=0; tradeData={}; pillState={};
+  emoData={estadoPrevio:null,emosAntes:[],conviccion:null,emosDurante:[],
+           moviStop:null,cerreAntes:null,emosCierre:[],notaProceso:0,aprendizaje:''};
+  goScreen('s-wizard'); renderWiz();
+}
+
+function renderWiz(){
+  const step=WIZ[wizStep], tot=WIZ.length;
+  const dots=$('wiz-dots'); dots.innerHTML='';
+  for(let i=0;i<tot;i++){
+    const d=document.createElement('div');
+    d.className='wd'+(i<wizStep?' done':i===wizStep?' now':'');
+    dots.appendChild(d);
+  }
+  $('wiz-cnt').textContent=(wizStep+1)+' / '+tot;
+  $('wh-label').textContent=step.label;
+  $('wh-name').textContent=step.name;
+  $('wb-prev').style.display=wizStep===0?'none':'';
+  $('wb-next').style.display=wizStep<tot-1?'':'none';
+  $('wb-save').style.display=wizStep===tot-1?'':'none';
+  const body=$('wiz-body'); body.innerHTML=''; step.render(body); body.scrollTop=0;
+}
+
+function wizBack(){ wizStep>0?wizPrev():goScreen('s-home'); }
+function wizPrev(){ if(wizStep>0){collectCur();wizStep--;renderWiz();} }
+function wizNext(){ collectCur();wizStep++;renderWiz(); }
+
+function collectCur(){
+  if(wizStep===0)cDatos();
+  else if(wizStep===3)cEjecucion();
+  else if(wizStep===4)cContexto();
+  else if(wizStep===7)cResultado();
+}
+
+// ── PASO 1: DATOS BÁSICOS
+function rDatos(body){
+  const now=new Date();
+  const fd=tradeData.fecha||now.toISOString().split('T')[0];
+  const hd=tradeData.horaEntrada||''; // no auto-fill: usuario debe introducirla
+  const cuentaOpts=getCuentas().length?mkOpts(getCuentas(),tradeData.cuenta,'— Sin cuenta —'):'<option value="">Sin cuentas — configura Sheets</option>';
+  body.innerHTML=`
+    <div class="field"><label class="flabel">Contrato</label>
+      <div class="pills" id="p-con">
+        <div class="pill" data-val="ES">ES</div>
+        <div class="pill" data-val="MES">MES</div>
+        <div class="pill" data-val="NQ">NQ</div>
+        <div class="pill" data-val="MNQ">MNQ</div>
+      </div>
+    </div>
+    <div class="field"><label class="flabel">Dirección</label>
+      <div class="pills" id="p-dir">
+        <div class="pill" data-val="Long">▲ Long</div>
+        <div class="pill" data-val="Short">▼ Short</div>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Tamaño</label>
+        <input class="finput" id="f-tam" type="number" value="${tradeData.tamano||1}" min="1" inputmode="numeric"/>
+      </div>
+      <div class="field"><label class="flabel">Cuenta</label>
+        <select class="fselect" id="f-cta" onchange="tradeData.cuenta=this.value">${cuentaOpts}</select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Fecha</label>
+        <div id="fp-fecha"></div>
+      </div>
+      <div class="field"><label class="flabel">Hora entrada <span style="color:var(--red);font-size:9px">*obligatoria</span></label>
+        <div id="fp-hin"></div>
+      </div>
+    </div>`;
+  makePillsWithVal('p-con','contrato',tradeData.contrato);
+  makePillsWithVal('p-dir','dir',tradeData.direccion);
+  buildDatePicker('fp-fecha', fd, ()=>calcIdMobile());
+  buildTimePicker('fp-hin', hd, true, ()=>calcIdMobile());
+}
+function cDatos(){
+  tradeData.fecha=getDatePickerValue('fp-fecha')||tradeData.fecha;
+  tradeData.horaEntrada=getTimePickerValue('fp-hin')||tradeData.horaEntrada;
+  tradeData.tamano=gv('f-tam'); tradeData.cuenta=gv('f-cta');
+  tradeData.contrato=pillState.contrato||tradeData.contrato||'';
+  tradeData.direccion=pillState.dir||tradeData.direccion||'';
+}
+
+// ── PASO 2: ESTADO PREVIO
+function rEmo0(body){
+  const fases=CFG.fases.filter(f=>f.wizPaso===0);
+  if(!fases.length){ body.innerHTML='<p style="color:var(--text3)">Sin fases configuradas</p>'; return; }
+  let firstWarn=true;
+  fases.forEach(fase=>{
+    (fase.preguntas||[]).filter(q=>q.tipo==='semaforo').forEach(q=>{
+      const intro=document.createElement('div');
+      intro.style.cssText='font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5';
+      intro.textContent=q.texto; body.appendChild(intro);
+      const wrap=document.createElement('div'); body.appendChild(wrap);
+      let warn=null;
+      if(firstWarn){ firstWarn=false;
+        warn=document.createElement('div');
+        warn.className='warn'+(emoData[q.campo]==='mal'?' show':'');
+        warn.textContent='⚠ Considera no operar hoy.';
+        body.appendChild(warn);
+      }
+      q.opciones.forEach(o=>{
+        const isG=o.col==='#00e676',isY=o.col==='#ffd740',sc=isG?'sel-g':isY?'sel-y':'sel-r';
+        const el=document.createElement('div');
+        el.className='sem-opt'+(emoData[q.campo]===o.val?' '+sc:'');
+        el.innerHTML=`<div class="sem-dot" style="background:${o.col}"></div><div style="flex:1"><div class="sem-lbl">${o.label}</div><div class="sem-sub">${o.sub||''}</div></div><div class="sem-act" style="color:${o.col}">${o.accion||''}</div>`;
+        el.onclick=()=>{ emoData[q.campo]=o.val; wrap.querySelectorAll('.sem-opt').forEach(e=>e.className='sem-opt'); el.classList.add(sc); if(warn)warn.classList.toggle('show',o.val==='mal'); };
+        wrap.appendChild(el);
+      });
+    });
+    if(fase.grupos&&fase.grupos.length){
+      const lbl=document.createElement('div'); lbl.className='sec-label';
+      lbl.textContent=fase.nombre+' — selecciona las que apliquen'; body.appendChild(lbl);
+      renderEmoFaseV2(body,fase,emoData.emosAntes);
+    }
+    renderPreguntas(body,fase,emoData);
+  });
+}
+
+// ── PASO 3: ANTES DEL TRADE
+function rEmo1(body){
+  const fases=CFG.fases.filter(f=>f.wizPaso===1);
+  if(!fases.length){ body.innerHTML='<p style="color:var(--text3)">Sin fases configuradas</p>'; return; }
+  fases.forEach(fase=>{
+    renderPreguntas(body,fase,emoData);
+    if(fase.grupos&&fase.grupos.length){
+      const lbl=document.createElement('div'); lbl.className='sec-label';
+      lbl.textContent=fase.nombre+' — selecciona las que apliquen'; body.appendChild(lbl);
+      renderEmoFaseV2(body,fase,emoData.emosAntes);
+    }
+  });
+}
+
+// ── PASO 4: EJECUCIÓN
+function rEjecucion(body){
+  body.innerHTML=`
+    <div class="field"><label class="flabel">Precio entrada</label>
+      <input class="finput" id="f-entry" type="number" step="0.25" inputmode="decimal" value="${tradeData.precioEntrada||''}"/>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Stop (pts)</label>
+        <input class="finput" id="f-stop" type="number" step="0.25" inputmode="decimal" value="${tradeData.stop||''}"/>
+      </div>
+      <div class="field"><label class="flabel">Target (pts)</label>
+        <input class="finput" id="f-tgt" type="number" step="0.25" inputmode="decimal" value="${tradeData.target||''}"/>
+      </div>
+    </div>`;
+}
+function cEjecucion(){
+  tradeData.precioEntrada=gv('f-entry');
+  tradeData.stop=gv('f-stop'); tradeData.target=gv('f-tgt');
+}
+
+// ── PASO 5: CONTEXTO & SETUP
+function rContexto(body){
+  body.innerHTML=`
+    <div class="field"><label class="flabel">Setup</label>
+      <select class="fselect" id="f-setup">${mkOptsObj(getSetups(),tradeData.setup)}</select>
+    </div>
+    <div class="field"><label class="flabel">Condición Mercado</label>
+      <select class="fselect" id="f-cond">${mkOpts(getDDOpts('condicionMercado'),tradeData.condicionMercado)}</select>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Sesión</label>
+        <select class="fselect" id="f-ses">${mkOpts(getDDOpts('sesion'),tradeData.sesion)}</select>
+      </div>
+      <div class="field"><label class="flabel">Timeframe</label>
+        <select class="fselect" id="f-tf">${mkOpts(getDDOpts('tf'),tradeData.tf)}</select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Corr. Tiempo</label>
+        <select class="fselect" id="f-tipoE">${mkOpts(getDDOpts('tipoEntrada'),tradeData.tipoEntrada)}</select>
+      </div>
+      <div class="field"><label class="flabel">Corr. Precio</label>
+        <select class="fselect" id="f-modE">${mkOpts(getDDOpts('modeloEntrada'),tradeData.modeloEntrada)}</select>
+      </div>
+    </div>`;
+}
+function cContexto(){
+  tradeData.setup=gv('f-setup'); tradeData.condicionMercado=gv('f-cond');
+  tradeData.sesion=gv('f-ses'); tradeData.tf=gv('f-tf');
+  tradeData.tipoEntrada=gv('f-tipoE'); tradeData.modeloEntrada=gv('f-modE');
+}
+
+// ── PASO 6: DURANTE
+function rEmo2(body){
+  const fases=CFG.fases.filter(f=>f.wizPaso===2);
+  if(!fases.length){ body.innerHTML='<p style="color:var(--text3)">Sin fases configuradas</p>'; return; }
+  fases.forEach(fase=>{
+    renderPreguntas(body,fase,emoData);
+    if(fase.grupos&&fase.grupos.length){
+      const lbl=document.createElement('div'); lbl.className='sec-label';
+      lbl.textContent=fase.nombre+' — selecciona las que apliquen'; body.appendChild(lbl);
+      renderEmoFaseV2(body,fase,emoData.emosDurante);
+    }
+  });
+}
+
+// ── PASO 7: CIERRE & REFLEXIÓN
+function rEmo3(body){
+  const fases=CFG.fases.filter(f=>f.wizPaso===3);
+  if(!fases.length){ body.innerHTML='<p style="color:var(--text3)">Sin fases configuradas</p>'; return; }
+  fases.forEach(fase=>{
+    if(fase.grupos&&fase.grupos.length){
+      const lbl=document.createElement('div'); lbl.className='sec-label';
+      lbl.textContent=fase.nombre+' — selecciona las que apliquen'; body.appendChild(lbl);
+      renderEmoFaseV2(body,fase,emoData.emosCierre);
+    }
+    renderPreguntas(body,fase,emoData);
+  });
+}
+
+// ── PASO 8: RESULTADO & DISCIPLINA
+function calcPnL(){
+  const entry=parseFloat(gv('f-entry')||tradeData.precioEntrada||'0');
+  const exit =parseFloat(gv('f-exit')||'0');
+  if(!entry||!exit) return;
+  const dir  =(tradeData.direccion||pillState.dir||'Long');
+  const size =parseFloat(tradeData.tamano||'1');
+  const instr=(tradeData.contrato||pillState.contrato||'ES').toUpperCase().split(' ')[0];
+  const dpp  = DPP[instr]||50;
+  const diff = dir.includes('Short')?(entry-exit):(exit-entry);
+  const pnl  = diff*dpp*size;
+  const el=$('f-pnl');
+  if(el&&!el.dataset.manual){ el.value=pnl.toFixed(2); el.style.color=pnl>=0?'var(--green)':'var(--red)'; }
+}
+function calcComision(){
+  const instr  = (tradeData.contrato||pillState.contrato||'ES').toUpperCase().split(' ')[0];
+  const size   = parseFloat(tradeData.tamano||gv('f-tam')||'1');
+  // Leer cuenta del campo si existe en DOM (puede no estar en tradeData si no se pasó por paso 1)
+  const ctaField = document.getElementById('f-cta');
+  const cuenta = (ctaField ? ctaField.value : null) || tradeData.cuenta || '';
+  const com    = getComisionForCuenta(cuenta, instr);
+  const el     = $('f-com');
+  if(!el) return;
+  if(el.dataset.manual) return;                    // usuario editó manualmente → no sobreescribir
+  if(com != null){
+    el.value = (com * size).toFixed(2);
+  } else if(!com && cuenta && CFG.propfirms.length){
+    // La cuenta existe pero no tiene comisión para este instrumento — dejar vacío
+    el.value = '';
+  }
+  // Si CFG no está cargado aún → el campo queda como estaba
+}
+
+function rResultado(body){
+  // Asegurar que tradeData tiene cuenta y contrato actualizados
+  // aunque el usuario no haya pasado por cDatos recientemente
+  const ctaEl  = document.getElementById('f-cta');
+  const conEl  = document.querySelector('#p-con .pill.on');
+  if(ctaEl  && ctaEl.value)   tradeData.cuenta    = ctaEl.value;
+  if(conEl  && conEl.dataset.val) tradeData.contrato = conEl.dataset.val;
+  if(pillState.contrato) tradeData.contrato = pillState.contrato;
+  if(pillState.cuenta)   tradeData.cuenta   = pillState.cuenta;
+  body.innerHTML=`
+    <div class="sec-label">Resultado</div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Precio salida</label>
+        <input class="finput" id="f-exit" type="number" step="0.25" inputmode="decimal" value="${tradeData.precioSalida||''}" oninput="calcPnL()"/>
+      </div>
+      <div class="field"><label class="flabel">Hora salida</label>
+        <div id="fp-hout"></div>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">P&amp;L ($) <span style="font-size:9px;color:var(--text3)">(auto)</span></label>
+        <div style="position:relative">
+          <input class="finput" id="f-pnl" type="number" step="0.01" inputmode="decimal" value="${tradeData.pnl||''}" style="padding-right:36px" oninput="this.dataset.manual='1'"/>
+          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--text3);cursor:pointer" onclick="delete $('f-pnl').dataset.manual;calcPnL()">↺</span>
+        </div>
+      </div>
+      <div class="field"><label class="flabel">Comisión ($) <span style="font-size:9px;color:var(--text3)">(auto)</span></label>
+        <div style="position:relative">
+          <input class="finput" id="f-com" type="number" step="0.01" inputmode="decimal" value="${tradeData.comisiones||''}" style="padding-right:36px" oninput="this.dataset.manual='1'"/>
+          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--text3);cursor:pointer" onclick="delete $('f-com').dataset.manual;calcComision()">↺</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-label">Disciplina</div>
+    <div class="field"><label class="flabel">¿Seguiste el plan?</label>
+      <select class="fselect" id="f-plan-seg">${mkOpts(getDDOpts('planSeguido'),tradeData.planSeguido)}</select>
+    </div>
+    <div class="field"><label class="flabel">Plan previo</label>
+      <textarea class="ftextarea" id="f-plan" placeholder="¿Cuál era tu plan antes de entrar?">${tradeData.plan||''}</textarea>
+    </div>
+    <div class="field"><label class="flabel">Comentarios</label>
+      <textarea class="ftextarea" id="f-comt" placeholder="¿Qué aprendes de este trade?">${tradeData.comentario||''}</textarea>
+    </div>`;
+  setTimeout(()=>{ calcPnL(); calcComision(); buildTimePicker('fp-hout', tradeData.horaSalida||'', false, null); },50);
+}
+function cResultado(){
+  tradeData.precioSalida=gv('f-exit');
+  tradeData.horaSalida=getTimePickerValue('fp-hout')||gv('f-hout')||tradeData.horaSalida;
+  tradeData.pnl=gv('f-pnl'); tradeData.comisiones=gv('f-com');
+  tradeData.planSeguido=gv('f-plan-seg');
+  tradeData.plan=gv('f-plan'); tradeData.comentario=gv('f-comt');
+}
+
+// ══════════════════════════════════════════════════════════
+//  RENDER EMOCIONES
+// ══════════════════════════════════════════════════════════
+let tooltipTimer=null;
+function showEmoTooltip(emo){
+  $('et-emoji').textContent=emo.emoji; $('et-name').textContent=emo.nombre||emo.id;
+  $('et-name').style.color=emo.cat==='pos'?'var(--green)':emo.cat==='neg'?'var(--red)':'var(--yellow)';
+  $('et-desc').textContent=emo.desc||emo.pregunta||'';
+  $('emo-tooltip').classList.add('show');
+  clearTimeout(tooltipTimer); tooltipTimer=setTimeout(hideEmoTooltip,3000);
+}
+function hideEmoTooltip(){ $('emo-tooltip').classList.remove('show'); }
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  renderEmoFaseV2  — pregunta guía por par, 2 opciones, mobile
+//  Sin botón del medio — no marcar = no aplica
+// ═══════════════════════════════════════════════════════════════════
+function renderEmoFaseV2(body, fase, selectedArr) {
+  const grupos = (fase.grupos||[])
+    .map(g => ({
+      pos:      g.pos ? EMOCIONES.find(e=>e.id===g.pos) : null,
+      neg:      g.neg ? EMOCIONES.find(e=>e.id===g.neg) : null,
+      pregunta: g.pregunta || null,
+    }))
+    .filter(g => g.pos || g.neg);
+  if (!grupos.length) return;
+
+  // Generar pregunta si no hay una del JSON
+  grupos.forEach(g => {
+    if (!g.pregunta) g.pregunta = (g.pos||g.neg)?.pregunta || '¿Cómo te sentiste en esta dimensión?';
+  });
+
+  const root = document.createElement('div');
+  root.style.cssText = 'display:flex;flex-direction:column;gap:6px';
+
+  // Progreso
+  const progRow = document.createElement('div');
+  progRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:2px';
+  const progBar  = document.createElement('div');
+  progBar.style.cssText = 'flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden';
+  const progFill = document.createElement('div');
+  progFill.style.cssText = 'height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s';
+  const progTxt  = document.createElement('span');
+  progTxt.style.cssText = 'font-size:10px;color:var(--text3);white-space:nowrap';
+  progBar.appendChild(progFill);
+  progRow.appendChild(progBar);
+  progRow.appendChild(progTxt);
+  root.appendChild(progRow);
+
+  const paresArea = document.createElement('div');
+  paresArea.style.cssText = 'display:flex;flex-direction:column;gap:5px';
+  root.appendChild(paresArea);
+
+  const resBox = document.createElement('div');
+  resBox.style.cssText = 'min-height:26px;padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);font-size:11px;margin-top:2px';
+  root.appendChild(resBox);
+
+  body.appendChild(root);
+
+  function render() {
+    paresArea.innerHTML = '';
+    const done = grupos.filter(g =>
+      (g.pos && selectedArr.includes(g.pos.id)) ||
+      (g.neg && selectedArr.includes(g.neg.id))
+    ).length;
+    progFill.style.width = (done/grupos.length*100)+'%';
+    progTxt.textContent  = done+' / '+grupos.length;
+
+    grupos.forEach((g, i) => {
+      const hasPos = g.pos && selectedArr.includes(g.pos.id);
+      const hasNeg = g.neg && selectedArr.includes(g.neg.id);
+      const hasSel = hasPos || hasNeg;
+
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:opacity .2s';
+      if (hasSel) wrap.style.opacity = '0.5';
+
+      const qEl = document.createElement('div');
+      qEl.style.cssText = 'padding:9px 12px;font-size:12px;color:var(--text2);line-height:1.4;background:var(--bg3);border-bottom:1px solid var(--border)';
+      qEl.textContent = g.pregunta;
+      wrap.appendChild(qEl);
+
+      if (!hasSel) {
+        const opts = document.createElement('div');
+        opts.style.cssText = 'display:grid;grid-template-columns:1fr 1fr';
+        [[g.pos,'pos',true],[g.neg,'neg',false]].forEach(([emo,lado,isLeft]) => {
+          if (!emo) return;
+          const btn = document.createElement('div');
+          btn.style.cssText = 'padding:10px 8px;text-align:center;cursor:pointer;font-size:11px;font-weight:600;'
+            +'color:var(--text2);background:var(--bg3);line-height:1.3;'
+            +(isLeft?'border-right:1px solid var(--border);':'');
+          btn.innerHTML = '<div style="font-size:18px;margin-bottom:3px">'+emo.emoji+'</div>'
+            +'<div>'+( emo.descCorta || emo.desc?.split('.')[0] || emo.nombre )+'</div>';
+
+          // Long press tooltip
+          let pt;
+          btn.addEventListener('touchstart',()=>{pt=setTimeout(()=>showEmoTooltip(emo),450);},{passive:true});
+          btn.addEventListener('touchend',()=>clearTimeout(pt));
+          btn.addEventListener('touchmove',()=>clearTimeout(pt));
+
+          btn.onclick = () => {
+            if(g.pos){const pi=selectedArr.indexOf(g.pos.id);if(pi>=0)selectedArr.splice(pi,1);}
+            if(g.neg){const ni=selectedArr.indexOf(g.neg.id);if(ni>=0)selectedArr.splice(ni,1);}
+            selectedArr.push(emo.id);
+            render(); actualizarResumen();
+          };
+          opts.appendChild(btn);
+        });
+        wrap.appendChild(opts);
+      } else {
+        const chosen = hasPos ? g.pos : g.neg;
+        const isPos  = !!hasPos;
+        const res    = document.createElement('div');
+        res.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--bg3)';
+        const chip = document.createElement('span');
+        chip.style.cssText = 'padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;'
+          +(isPos?'background:rgba(0,230,118,.2);color:var(--green)':'background:rgba(255,61,61,.2);color:var(--red)');
+        chip.textContent = chosen.emoji+' '+chosen.nombre;
+        const cambiar = document.createElement('span');
+        cambiar.style.cssText = 'font-size:10px;color:var(--text3);text-decoration:underline;cursor:pointer;margin-left:auto';
+        cambiar.textContent = 'cambiar';
+        cambiar.onclick = () => {
+          if(g.pos){const pi=selectedArr.indexOf(g.pos.id);if(pi>=0)selectedArr.splice(pi,1);}
+          if(g.neg){const ni=selectedArr.indexOf(g.neg.id);if(ni>=0)selectedArr.splice(ni,1);}
+          render(); actualizarResumen();
+        };
+        res.appendChild(chip); res.appendChild(cambiar);
+        wrap.appendChild(res);
+      }
+      paresArea.appendChild(wrap);
+    });
+    actualizarResumen();
+  }
+
+  function actualizarResumen() {
+    const marked = selectedArr.filter(id => grupos.some(g=>g.pos?.id===id||g.neg?.id===id));
+    if (!marked.length) { resBox.innerHTML='<span style="color:var(--text3)">Ninguna seleccionada</span>'; return; }
+    resBox.innerHTML = marked.map(id => {
+      const emo = EMOCIONES.find(e=>e.id===id); if(!emo) return '';
+      const isP = grupos.some(g=>g.pos?.id===id);
+      const bg  = isP?'rgba(0,230,118,.18)':'rgba(255,61,61,.18)';
+      const col = isP?'var(--green)':'var(--red)';
+      return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;background:'+bg+';color:'+col+';margin:2px;font-size:10px;font-weight:600">'+emo.emoji+' '+emo.nombre+'</span>';
+    }).join('');
+  }
+
+  render();
+}
+
+function renderEmoFase(body, fase, selectedArr){
+  (fase.grupos||[]).forEach(g=>{
+    const emoP=emoById(g.pos), emoN=emoById(g.neg), emoU=g.neu?emoById(g.neu):null;
+    if(!emoP && !emoN) return;
+    const pair=document.createElement('div'); pair.className='emo-pair'+(emoU?' trio':'');
+    const makeSide=(emo,cls)=>{
+      if(!emo) return;
+      const half=document.createElement('div');
+      half.className=`emo-half ${cls}`+(selectedArr.includes(emo.id)?' sel':'');
+      half.dataset.eid=emo.id;
+      half.innerHTML=`<div class="emo-emoji">${emo.emoji}</div><div class="emo-name">${emo.nombre}</div>`;
+      let pressTimer;
+      half.addEventListener('touchstart',()=>{pressTimer=setTimeout(()=>showEmoTooltip(emo),400);},{passive:true});
+      half.addEventListener('touchend',()=>clearTimeout(pressTimer));
+      half.addEventListener('touchmove',()=>clearTimeout(pressTimer));
+      half.onclick=()=>{
+        pair.querySelectorAll('.emo-half').forEach(h=>{
+          if(h.dataset.eid&&h.dataset.eid!==emo.id){const i=selectedArr.indexOf(h.dataset.eid);if(i>=0)selectedArr.splice(i,1);h.classList.remove('sel');}
+        });
+        const idx=selectedArr.indexOf(emo.id);
+        if(idx>=0){selectedArr.splice(idx,1);half.classList.remove('sel');}
+        else{selectedArr.push(emo.id);half.classList.add('sel');}
+      };
+      pair.appendChild(half);
+    };
+    makeSide(emoP,'ep'); if(emoU)makeSide(emoU,'eu'); makeSide(emoN,'en');
+    body.appendChild(pair);
+  });
+}
+
+function renderPreguntas(body, fase, dataObj){
+  (fase.preguntas||[]).forEach(q=>{
+    if(q.tipo==='semaforo') return; // ya manejado en rEmo0
+    const lbl=document.createElement('div'); lbl.className='sec-label'; lbl.textContent=q.texto; body.appendChild(lbl);
+    if(q.tipo==='seleccion'){
+      const grid=document.createElement('div'); grid.className='sel-grid'; body.appendChild(grid);
+      (q.opciones||[]).forEach(o=>{
+        const el=document.createElement('div'); el.className='sel-opt'; el.dataset.val=o.val;
+        el.style.borderColor=dataObj[q.campo]===o.val?o.col:'';
+        el.innerHTML=`<div class="sel-lbl">${o.label}</div><div class="sel-sub">${o.sub||''}</div>`;
+        el.onclick=()=>{ dataObj[q.campo]=o.val; grid.querySelectorAll('.sel-opt').forEach(e=>e.style.borderColor=''); el.style.borderColor=o.col; };
+        grid.appendChild(el);
+      });
+    } else if(q.tipo==='sino'){
+      const row=document.createElement('div'); row.className='sino-row'; body.appendChild(row);
+      [{val:true,label:q.opSi||'✅ Sí'},{val:false,label:q.opNo||'❌ No'}].forEach(o=>{
+        const btn=document.createElement('div'); btn.className='sino-btn';
+        const col=o.val?'var(--green)':'var(--red)';
+        btn.style.borderColor=dataObj[q.campo]===o.val?col:'';
+        btn.textContent=o.label;
+        btn.onclick=()=>{ dataObj[q.campo]=o.val; row.querySelectorAll('.sino-btn').forEach(b=>b.style.borderColor=''); btn.style.borderColor=col; };
+        row.appendChild(btn);
+      });
+    } else if(q.tipo==='puntuacion'){
+      const row=document.createElement('div'); row.className='stars'; body.appendChild(row);
+      for(let i=1;i<=(q.max||5);i++){
+        const s=document.createElement('span'); s.className='star'+(dataObj[q.campo]>=i?' lit':''); s.textContent='★';
+        const idx=i; s.onclick=()=>{ dataObj[q.campo]=idx; row.querySelectorAll('.star').forEach((st,j)=>st.classList.toggle('lit',j<idx)); };
+        row.appendChild(s);
+      }
+    } else if(q.tipo==='texto'){
+      const ta=document.createElement('textarea'); ta.className='ftextarea';
+      ta.placeholder='Escribe aquí...'; ta.value=dataObj[q.campo]||'';
+      ta.oninput=()=>{ dataObj[q.campo]=ta.value; }; body.appendChild(ta);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  GUARDAR NUEVO TRADE
+// ══════════════════════════════════════════════════════════
+async function wizSave(){
+  cResultado();
+  if(!API_URL){ toast('Configura la URL de Sheets primero','err'); return; }
+  // Validar que se haya introducido hora entrada
+  if(!tradeData.horaEntrada || tradeData.horaEntrada===''){
+    toast('⚠ Introduce la hora de entrada primero','err');
+    const hint = document.getElementById('fp-hin-hint') || document.getElementById('fp-hin2-hint');
+    if(hint){ hint.classList.add('show'); setTimeout(()=>hint.classList.remove('show'),3000); }
+    return;
+  }
+  showLoad();
+  // ID = fecha + horaEntrada en formato YYYYMMDDHHMMSS
+  // Usar el pendingId calculado en tiempo real, o calcularlo ahora
+  let newId = tradeData._pendingId || '';
+  if (!newId) {
+    const fd = (tradeData.fecha || new Date().toISOString().split('T')[0]).replace(/-/g,'');
+    const fh = (tradeData.horaEntrada || '000000').replace(/:/g,'').padEnd(6,'0');
+    newId = fd + fh;
+  }
+  if (!newId || newId.length < 8) newId = String(Date.now()); // último fallback
+  const emoJson = JSON.stringify({...emoData});
+  const payload = {action:'addTrade', ...tradeData, id:newId, emocion:emoJson};
+  try{
+    await gasPost(API_URL, payload);
+    hideLoad();
+    allTrades.push({...tradeData, id:newId, emocion:emoJson});
+    toast('✓ Trade #'+newId.slice(-6)+' guardado');
+    setTimeout(()=>goScreen('s-home'),1400);
+  } catch(e){ hideLoad(); toast('Error: '+e.message,'err'); }
+}
+
+// ══════════════════════════════════════════════════════════
+//  HISTÓRICO
+// ══════════════════════════════════════════════════════════
+async function goHistory(){ goScreen('s-history'); await loadHistory(); }
+
+async function loadHistory(){
+  if(!API_URL){ $('hist-list').innerHTML='<div class="hist-empty">Configura la URL de Sheets primero</div>'; return; }
+  showLoad();
+  if(!CFG.loaded){ try{await loadConfig();}catch(_){} }
+  try{
+    const data=await fetchGET(API_URL,{action:'getTrades'});
+    if(data.status==='ok'){
+      const hdrs=(data.headers||[]).map(h=>String(h).trim());
+      allTrades=(data.data||[]).map(r=>{ const o={}; hdrs.forEach((h,i)=>o[h]=r[i]??''); return o; });
+    }
+    hideLoad(); renderHistory();
+  } catch(e){
+    hideLoad();
+    $('hist-list').innerHTML=`<div class="hist-empty">Error: ${e.message}</div>`;
+  }
+}
+
+function filterH(f,el){ histFilter=f; document.querySelectorAll('.hf').forEach(p=>p.classList.remove('on')); el.classList.add('on'); renderHistory(); }
+
+function renderHistory(){
+  const list=$('hist-list'); list.innerHTML='';
+  let trades=[...allTrades].sort((a,b)=>{
+    const da=normDate(a.fecha)+' '+(normHora(a.horaEntrada)||'00:00');
+    const db=normDate(b.fecha)+' '+(normHora(b.horaEntrada)||'00:00');
+    return db.localeCompare(da);
+  });
+  const today=new Date().toISOString().split('T')[0];
+  const weekAgo=new Date(Date.now()-7*86400000).toISOString().split('T')[0];
+  const pnlNum=t=>parseFloat(String(t.pnl||'0').replace(',','.'))||0;
+  if(histFilter==='win')   trades=trades.filter(t=>pnlNum(t)>0);
+  if(histFilter==='loss')  trades=trades.filter(t=>pnlNum(t)<0);
+  if(histFilter==='today') trades=trades.filter(t=>normDate(t.fecha)===today);
+  if(histFilter==='week')  trades=trades.filter(t=>normDate(t.fecha)>=weekAgo);
+  if(!trades.length){ list.innerHTML='<div class="hist-empty">Sin operaciones</div>'; return; }
+  trades.forEach(t=>{
+    const pnl=pnlNum(t), isWin=pnl>0;
+    const pnlStr=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toFixed(2);
+    const idx=allTrades.indexOf(t);
+    const el=document.createElement('div'); el.className='hi '+(isWin?'win':'loss');
+    el.innerHTML=`
+      <div class="hi-top"><div class="hi-setup">${t.setup||'Sin setup'}</div><div class="hi-pnl ${isWin?'pos':'neg'}">${pnlStr}</div></div>
+      <div class="hi-tags">
+        ${t.sesion?`<span class="hi-tag">${t.sesion}</span>`:''}
+        ${t.condicionMercado?`<span class="hi-tag">${t.condicionMercado}</span>`:''}
+        ${t.planSeguido?`<span class="hi-tag">Plan: ${t.planSeguido}</span>`:''}
+        ${t.emocion?'<span class="hi-tag">🧠 emo</span>':''}
+      </div>
+      <div class="hi-bot">
+        <div class="hi-date">${displayDate(t.fecha)||'—'} · ${normHora(t.horaEntrada)||''}</div>
+        <div class="hi-dir ${(t.direccion||'').toLowerCase().includes('short')?'short':'long'}">${t.direccion||''} · ${t.contrato||''}</div>
+      </div>`;
+    el.onclick=()=>openEdit(idx);
+    list.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  EDITAR TRADE
+// ══════════════════════════════════════════════════════════
+const EDIT_TABS=[
+  {label:'📋 Datos',      render:renderEditDatos},
+  {label:'📊 Contexto',   render:renderEditContexto},
+  {label:'✅ Disciplina', render:renderEditDisciplina},
+  {label:'🧠 Emociones',  render:renderEditEmociones},
+  {label:'🗑 Eliminar',   render:renderEditEliminar},
+];
+
+function openEdit(idx){
+  currentEditIdx=idx;
+  const t=allTrades[idx];
+  $('edit-title').textContent='Trade #'+(String(t.id||'').slice(-6)||idx+1);
+  try{ editEmoData=t.emocion?JSON.parse(t.emocion):{}; }catch(_){ editEmoData={}; }
+  if(!editEmoData.emosAntes)   editEmoData.emosAntes=[];
+  if(!editEmoData.emosDurante) editEmoData.emosDurante=[];
+  if(!editEmoData.emosCierre)  editEmoData.emosCierre=[];
+  editSnapshot={...t}; editTab=0;
+  renderEditTabs(); goScreen('s-edit');
+}
+
+function collectEditTab(){
+  // Custom date/time pickers (tab Datos)
+  const dateVal = getDatePickerValue('efp-fecha');
+  if(dateVal) editSnapshot.fecha = displayDate(dateVal);
+  const hinVal = getTimePickerValue('efp-hin');
+  if(hinVal){ editSnapshot.horaEntrada = hinVal; recalcEditId(); }
+  const houtVal = getTimePickerValue('efp-hout');
+  if(houtVal) editSnapshot.horaSalida = houtVal;
+
+  const fields={
+    'ef-dir':      v=>{ if(v) editSnapshot.direccion=v; },
+    'ef-con':      v=>{ if(v) editSnapshot.contrato=v; },
+    'ef-tam':      v=>{ if(v) editSnapshot.tamano=v; },
+    'ef-cta':      v=>{ if(v) editSnapshot.cuenta=v; },
+    'ef-entry':    v=>{ if(v) editSnapshot.precioEntrada=v; },
+    'ef-exit':     v=>{ if(v) editSnapshot.precioSalida=v; },
+    'ef-pnl':      v=>{ if(v) editSnapshot.pnl=v; },
+    'ef-com':      v=>{ if(v) editSnapshot.comisiones=v; },
+    'ef-stop':     v=>{ if(v) editSnapshot.stop=v; },
+    'ef-tgt':      v=>{ if(v) editSnapshot.target=v; },
+    'ef-setup':    v=>{ if(v) editSnapshot.setup=v; },
+    'ef-cond':     v=>{ if(v) editSnapshot.condicionMercado=v; },
+    'ef-ses':      v=>{ if(v) editSnapshot.sesion=v; },
+    'ef-tf':       v=>{ if(v) editSnapshot.tf=v; },
+    'ef-tipoE':    v=>{ if(v) editSnapshot.tipoEntrada=v; },
+    'ef-modE':     v=>{ if(v) editSnapshot.modeloEntrada=v; },
+    'ef-plan-seg': v=>{ if(v) editSnapshot.planSeguido=v; },
+    'ef-plan':     v=>{ if(v) editSnapshot.plan=v; },
+    'ef-comt':     v=>{ if(v) editSnapshot.comentario=v; },
+  };
+  Object.entries(fields).forEach(([id,fn])=>{ const el=$(id); if(el)fn(el.value); });
+}
+
+function renderEditTabs(){
+  const body=$('edit-body'); body.innerHTML='';
+  const tabBar=document.createElement('div');
+  tabBar.style.cssText='display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px';
+  EDIT_TABS.forEach((tab,i)=>{
+    const btn=document.createElement('div');
+    btn.style.cssText=`white-space:nowrap;padding:7px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--mono);border:1px solid;`+
+      (i===editTab?'background:var(--accent);border-color:var(--accent);color:#000':'background:var(--bg3);border-color:var(--border2);color:var(--text3)');
+    btn.textContent=tab.label;
+    btn.onclick=()=>{ collectEditTab(); editTab=i; renderEditTabs(); };
+    tabBar.appendChild(btn);
+  });
+  body.appendChild(tabBar);
+  const content=document.createElement('div');
+  body.appendChild(content);
+  EDIT_TABS[editTab].render(content, editSnapshot);
+  const sp=document.createElement('div'); sp.style.height='20px'; body.appendChild(sp);
+}
+
+function renderEditDatos(body,t){
+  const contratos=['ES','MES','NQ','MNQ'];
+  const tc=String(t.contrato||'').trim().split(' ')[0];
+  const cuentaOpts=getCuentas().length?mkOpts(getCuentas(),t.cuenta,'— Sin cuenta —'):'<option value="">Sin cuentas</option>';
+  body.innerHTML=`
+    <div class="sec-label">Identificación</div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Fecha</label><div id="efp-fecha"></div></div>
+      <div class="field"><label class="flabel">Hora entrada</label><div id="efp-hin"></div></div>
+    </div>
+    <div class="field"><label class="flabel">Dirección</label>
+      <select class="fselect" id="ef-dir">
+        <option value="Long" ${String(t.direccion).trim()==='Long'?'selected':''}>▲ Long</option>
+        <option value="Short" ${String(t.direccion).trim()==='Short'?'selected':''}>▼ Short</option>
+      </select>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Contrato</label>
+        <select class="fselect" id="ef-con">
+          ${contratos.map(c=>`<option value="${c}"${tc===c?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label class="flabel">Tamaño</label>
+        <input class="finput" id="ef-tam" type="number" value="${t.tamano||'1'}"/>
+      </div>
+    </div>
+    <div class="field"><label class="flabel">Cuenta</label>
+      <select class="fselect" id="ef-cta">${cuentaOpts}</select>
+    </div>
+    <div class="sec-label">Precios & Resultado</div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Precio entrada</label><input class="finput" id="ef-entry" type="number" step="0.25" inputmode="decimal" value="${t.precioEntrada||''}"/></div>
+      <div class="field"><label class="flabel">Precio salida</label><input class="finput" id="ef-exit" type="number" step="0.25" inputmode="decimal" value="${t.precioSalida||''}"/></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Hora salida</label><div id="efp-hout"></div></div>
+      <div class="field"><label class="flabel">P&amp;L ($)</label><input class="finput" id="ef-pnl" type="number" step="0.01" inputmode="decimal" value="${t.pnl||''}"/></div>
+    </div>
+    <div class="frow3">
+      <div class="field"><label class="flabel">Stop</label><input class="finput" id="ef-stop" type="number" step="0.25" inputmode="decimal" value="${t.stop||''}"/></div>
+      <div class="field"><label class="flabel">Target</label><input class="finput" id="ef-tgt" type="number" step="0.25" inputmode="decimal" value="${t.target||''}"/></div>
+      <div class="field"><label class="flabel">Comisión</label><input class="finput" id="ef-com" type="number" step="0.01" inputmode="decimal" value="${t.comisiones||''}"/></div>
+    </div>`;
+  buildDatePicker('efp-fecha', normDate(t.fecha), null);
+  buildTimePicker('efp-hin', normHora(t.horaEntrada)||'', false, ()=>recalcEditId());
+  buildTimePicker('efp-hout', t.horaSalida||'', false, null);
+}
+
+// Recalcula el ID en edición cuando cambia la hora
+function recalcEditId(){
+  const dateVal = getDatePickerValue('efp-fecha') || normDate(editSnapshot.fecha||'');
+  const timeVal = getTimePickerValue('efp-hin');
+  if(!timeVal) return;
+  const d = dateVal.replace(/-/g,'');
+  const h = timeVal.replace(/:/g,'').padEnd(6,'0');
+  editSnapshot._newId = d + h;
+}
+
+function renderEditContexto(body,t){
+  body.innerHTML=`
+    <div class="sec-label">Setup & Análisis</div>
+    <div class="field"><label class="flabel">Setup</label>
+      <select class="fselect" id="ef-setup">${mkOptsObj(getSetups(),t.setup)}</select>
+    </div>
+    <div class="field"><label class="flabel">Condición Mercado</label>
+      <select class="fselect" id="ef-cond">${mkOpts(getDDOpts('condicionMercado'),t.condicionMercado)}</select>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Sesión</label>
+        <select class="fselect" id="ef-ses">${mkOpts(getDDOpts('sesion'),t.sesion)}</select>
+      </div>
+      <div class="field"><label class="flabel">Timeframe</label>
+        <select class="fselect" id="ef-tf">${mkOpts(getDDOpts('tf'),t.tf)}</select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="field"><label class="flabel">Corr. Tiempo</label>
+        <select class="fselect" id="ef-tipoE">${mkOpts(getDDOpts('tipoEntrada'),t.tipoEntrada)}</select>
+      </div>
+      <div class="field"><label class="flabel">Corr. Precio</label>
+        <select class="fselect" id="ef-modE">${mkOpts(getDDOpts('modeloEntrada'),t.modeloEntrada)}</select>
+      </div>
+    </div>`;
+}
+
+function renderEditDisciplina(body,t){
+  const planOpts=getDDOpts('planSeguido').length?getDDOpts('planSeguido'):['Sí','Parcialmente','No'];
+  body.innerHTML=`
+    <div class="sec-label">Disciplina & Notas</div>
+    <div class="field"><label class="flabel">¿Seguiste el plan?</label>
+      <select class="fselect" id="ef-plan-seg">${mkOpts(planOpts,t.planSeguido)}</select>
+    </div>
+    <div class="field"><label class="flabel">Plan previo</label>
+      <textarea class="ftextarea" id="ef-plan" placeholder="Describe el plan...">${t.plan||''}</textarea>
+    </div>
+    <div class="field"><label class="flabel">Comentarios</label>
+      <textarea class="ftextarea" id="ef-comt" placeholder="¿Qué aprendes?">${t.comentario||''}</textarea>
+    </div>`;
+}
+
+function renderEditEmociones(body){
+  const ed=editEmoData;
+  // Estado previo
+  const fase0=CFG.fases.find(f=>f.wizPaso===0);
+  if(fase0){
+    (fase0.preguntas||[]).filter(q=>q.tipo==='semaforo').forEach(q=>{
+      const lbl=document.createElement('div'); lbl.className='sec-label'; lbl.textContent=q.texto; body.appendChild(lbl);
+      const wrap=document.createElement('div'); body.appendChild(wrap);
+      q.opciones.forEach(o=>{
+        const isG=o.col==='#00e676',isY=o.col==='#ffd740',sc=isG?'sel-g':isY?'sel-y':'sel-r';
+        const el=document.createElement('div');
+        el.className='sem-opt'+(ed[q.campo]===o.val?' '+sc:'');
+        el.innerHTML=`<div class="sem-dot" style="background:${o.col}"></div><div style="flex:1"><div class="sem-lbl">${o.label}</div></div>`;
+        el.onclick=()=>{ ed[q.campo]=o.val; wrap.querySelectorAll('.sem-opt').forEach(e=>e.className='sem-opt'); el.classList.add(sc); };
+        wrap.appendChild(el);
+      });
+    });
+  }
+  // Antes, durante, cierre — usando las fases reales de CFG
+  [[1,'emosAntes','antes'],[2,'emosDurante','durante'],[3,'emosCierre','cierre']].forEach(([paso,arr,label])=>{
+    CFG.fases.filter(f=>f.wizPaso===paso).forEach(fase=>{
+      renderPreguntas(body,fase,ed);
+      if(fase.grupos&&fase.grupos.length){
+        const lbl=document.createElement('div'); lbl.className='sec-label';
+        lbl.textContent=fase.nombre+' — '+label; body.appendChild(lbl);
+        renderEmoFase(body,fase,ed[arr]);
+      }
+    });
+  });
+}
+
+function renderEditEliminar(body,t){
+  body.innerHTML=`
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:40px;margin-bottom:12px">🗑</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px">Eliminar Trade #${String(t.id||'').slice(-6)}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:24px;line-height:1.5">Esta acción eliminará el trade de Google Sheets.<br>No se puede deshacer.</div>
+      <div style="background:rgba(255,61,61,.08);border:1px solid rgba(255,61,61,.25);border-radius:10px;padding:16px;margin-bottom:20px;text-align:left">
+        <div style="font-size:11px;color:var(--text2);font-family:var(--mono);margin-bottom:6px">RESUMEN</div>
+        <div style="font-size:13px">${t.setup||'Sin setup'} · ${t.direccion||''} · ${t.contrato||''}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">${displayDate(t.fecha)||''} · P&L: ${t.pnl||'—'}</div>
+      </div>
+      <button onclick="doDeleteTrade()" style="width:100%;padding:14px;border-radius:10px;background:var(--red);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer">🗑 Confirmar eliminación</button>
+    </div>`;
+}
+
+async function doDeleteTrade(){
+  const t=allTrades[currentEditIdx];
+  showLoad();
+  try{
+    await gasPost(API_URL,{action:'deleteTrade', id:t.id});
+    allTrades.splice(currentEditIdx,1);
+    hideLoad(); toast('✓ Trade eliminado');
+    setTimeout(()=>{ goScreen('s-history'); renderHistory(); },900);
+  } catch(e){ hideLoad(); toast('Error: '+e.message,'err'); }
+}
+
+async function editSave(){
+  if(!API_URL){ toast('Configura la URL de Sheets primero','err'); return; }
+  collectEditTab();
+  const t = allTrades[currentEditIdx];
+  const oldId = String(t.id||'');
+
+  // Calcular nuevo ID desde fecha+hora actuales del snapshot
+  const fechaISO = normDate(editSnapshot.fecha||'') || normDate(t.fecha||'');
+  const hora     = normHora(editSnapshot.horaEntrada||'') || normHora(t.horaEntrada||'');
+  const newId    = (fechaISO && hora)
+    ? fechaISO.replace(/-/g,'') + hora.replace(/:/g,'').padEnd(6,'0')
+    : oldId;
+
+  const idChanged    = newId !== oldId;
+  const fechaCambio  = normDate(editSnapshot.fecha||'') !== normDate(t.fecha||'');
+  const horaCambio   = normHora(editSnapshot.horaEntrada||'') !== normHora(t.horaEntrada||'');
+
+  if(idChanged || fechaCambio || horaCambio){
+    const confirmed = await showEditConfirm(
+      displayDate(t.fecha)||'—', normHora(t.horaEntrada)||'—', oldId,
+      displayDate(editSnapshot.fecha)||'—', normHora(editSnapshot.horaEntrada)||'—', newId,
+      idChanged
+    );
+    if(!confirmed) return;
+  }
+
+  showLoad();
+  const emoJson = JSON.stringify({...editEmoData});
+  try{
+    if(idChanged){
+      // Borrar trade viejo, crear nuevo con nuevo ID y todos los datos
+      await gasPost(API_URL, {action:'deleteTrade', id:oldId});
+      await gasPost(API_URL, {action:'addTrade', ...editSnapshot, id:newId, emocion:emoJson});
+      Object.assign(allTrades[currentEditIdx], editSnapshot, {id:newId, emocion:emoJson});
+      hideLoad();
+      toast('✓ ID actualizado · …'+oldId.slice(-6)+' → …'+newId.slice(-6));
+    } else {
+      await gasPost(API_URL, {action:'updateTrade', ...editSnapshot, id:oldId, emocion:emoJson});
+      Object.assign(allTrades[currentEditIdx], editSnapshot, {emocion:emoJson});
+      hideLoad();
+      toast('✓ Trade actualizado');
+    }
+    setTimeout(()=>{ goScreen('s-history'); renderHistory(); }, 1200);
+  } catch(e){ hideLoad(); toast('Error: '+e.message,'err'); }
+}
+
+function showEditConfirm(oldFecha, oldHora, oldId, newFecha, newHora, newId, idChanged){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:2000;display:flex;align-items:flex-end;justify-content:center';
+    ov.innerHTML=`
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px 16px 0 0;padding:24px 20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,16px));width:100%;max-width:480px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--yellow);letter-spacing:2px;margin-bottom:12px">&#9888; CAMBIO DE FECHA / HORA</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          ${idChanged
+            ? 'El ID cambiar&#225;. Se <strong style="color:var(--red)">eliminar&#225; el registro antiguo</strong> y se <strong style="color:var(--green)">crear&#225; uno nuevo</strong> con todos los datos.'
+            : 'Fecha u hora han cambiado. Se actualizar&#225; el registro.'
+          }
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+          <div style="background:rgba(255,61,61,.08);border:1px solid rgba(255,61,61,.3);border-radius:8px;padding:12px">
+            <div style="font-size:9px;color:var(--red);font-family:var(--mono);margin-bottom:6px">ANTERIOR</div>
+            <div style="font-size:13px;font-weight:700">${oldFecha}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${oldHora}</div>
+            <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:6px">ID …${String(oldId).slice(-6)}</div>
+          </div>
+          <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:12px">
+            <div style="font-size:9px;color:var(--green);font-family:var(--mono);margin-bottom:6px">NUEVO</div>
+            <div style="font-size:13px;font-weight:700">${newFecha}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${newHora}</div>
+            <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:6px">ID …${String(newId).slice(-6)}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button id="ec-cancel" style="flex:1;padding:13px;border-radius:10px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">Cancelar</button>
+          <button id="ec-confirm" style="flex:1;padding:13px;border-radius:10px;background:var(--green);border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">&#10003; Confirmar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#ec-cancel').onclick  = ()=>{ ov.remove(); resolve(false); };
+    ov.querySelector('#ec-confirm').onclick = ()=>{ ov.remove(); resolve(true); };
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  FETCH — fetch normal + JSONP fallback
+// ══════════════════════════════════════════════════════════
+async function fetchGET(url, params){
+  const qs=Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+  const full=url+'?'+qs;
+  // Intento 1: fetch con JSON.parse seguro
+  for(const mode of ['cors','no-cors',null]){
+    try{
+      const opts=mode?{mode}:{};
+      const res=await fetch(full,opts);
+      const text=await res.text();
+      const t=text.trim();
+      if(t.startsWith('{')) return JSON.parse(t);
+    }catch(_){}
+  }
+  // Intento 2: JSONP
+  return new Promise((resolve,reject)=>{
+    const cb='tjcb_'+Date.now();
+    const el=document.createElement('script');
+    const timeout=setTimeout(()=>{ delete window[cb]; el.remove(); reject(new Error('Timeout')); },8000);
+    window[cb]=(data)=>{ clearTimeout(timeout); delete window[cb]; el.remove(); resolve(data); };
+    el.src=full+'&callback='+cb;
+    el.onerror=()=>{ clearTimeout(timeout); delete window[cb]; el.remove(); reject(new Error('Error de red')); };
+    document.body.appendChild(el);
+  });
+}
+
+async function gasPost(url, data){
+  const body='action='+encodeURIComponent(data.action||'')+'&payload='+encodeURIComponent(JSON.stringify(data));
+  try{
+    await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+    return {status:'ok'};
+  } catch(e){ throw e; }
+}
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════
+//  SISTEMA DE TEMAS — mobile
+// ══════════════════════════════════════════════════════════
+const THEMES_MOB = [
+  { id:'dark-blue',     name:'Azul noche',      accent:'#00d4ff', bg:'#070b10',
+    swatches:['#070b10','#111c28','#00d4ff'],
+    vars:{'--bg':'#070b10','--bg2':'#0c1219','--bg3':'#111c28','--bg4':'#172436','--border':'#213040','--border2':'#2c4158','--text':'#e2eaf5','--text2':'#96aec8','--text3':'#5e7a9a','--accent':'#00d4ff','--accent2':'#0099bb'} },
+  { id:'soft-dark',     name:'Gris suave',       accent:'#6c8cff', bg:'#111214',
+    swatches:['#111214','#202226','#6c8cff'],
+    vars:{'--bg':'#111214','--bg2':'#18191d','--bg3':'#202226','--bg4':'#28292f','--border':'#2e3038','--border2':'#3c3e48','--text':'#dde3ee','--text2':'#a0a8bb','--text3':'#696f84','--accent':'#6c8cff','--accent2':'#4a6bdd'} },
+  { id:'dark-green',    name:'Terminal verde',   accent:'#00e676', bg:'#080c08',
+    swatches:['#080c08','#141e14','#00e676'],
+    vars:{'--bg':'#080c08','--bg2':'#0e150e','--bg3':'#141e14','--bg4':'#1a261a','--border':'#223022','--border2':'#2e4030','--text':'#d4f0dc','--text2':'#85b890','--text3':'#5a8a64','--accent':'#00e676','--accent2':'#00a152'} },
+  { id:'slate',         name:'Pizarra',          accent:'#38bdf8', bg:'#1a1f2e',
+    swatches:['#1a1f2e','#2c3256','#38bdf8'],
+    vars:{'--bg':'#1a1f2e','--bg2':'#232944','--bg3':'#2c3256','--bg4':'#363c66','--border':'#343d62','--border2':'#424e7a','--text':'#e0eaf8','--text2':'#96aac4','--text3':'#647a9a','--accent':'#38bdf8','--accent2':'#0ea5e9'} },
+  { id:'high-contrast', name:'Alto contraste',   accent:'#facc15', bg:'#000000',
+    swatches:['#000000','#161616','#facc15'],
+    vars:{'--bg':'#000000','--bg2':'#0d0d0d','--bg3':'#161616','--bg4':'#202020','--border':'#333333','--border2':'#444444','--text':'#f0f0f0','--text2':'#c0c0c0','--text3':'#888888','--accent':'#facc15','--accent2':'#ca9a00'} },
+  { id:'light',         name:'Claro',            accent:'#0055bb', bg:'#eef2f8',
+    swatches:['#eef2f8','#ffffff','#0055bb'],
+    vars:{'--bg':'#eef2f8','--bg2':'#ffffff','--bg3':'#e4eaf4','--bg4':'#d4ddef','--border':'#c0cede','--border2':'#a8bad0','--text':'#0e1e34','--text2':'#2e4464','--text3':'#5a7494','--accent':'#0055bb','--accent2':'#003d99'} },
+];
+
+const THEME_MOB_KEY = 'tj_mobile_theme';
+let currentThemeMob = localStorage.getItem(THEME_MOB_KEY) || 'dark-blue';
+
+function applyThemeMob(id) {
+  const theme = THEMES_MOB.find(t=>t.id===id);
+  if (!theme) return;
+  currentThemeMob = id;
+  localStorage.setItem(THEME_MOB_KEY, id);
+  const root = document.documentElement;
+  Object.keys(theme.vars).forEach(k => root.style.setProperty(k, theme.vars[k]));
+  // Actualizar theme-color meta (barra del sistema iOS/Android)
+  const mc = document.querySelector('meta[name="theme-color"]');
+  if (mc) mc.content = theme.vars['--bg'];
+  // Re-render picker si está visible
+  renderThemePicker();
+}
+
+function renderThemePicker() {
+  const el = document.getElementById('theme-picker-area');
+  if (!el) return;
+  el.innerHTML = '';
+  THEMES_MOB.forEach(t => {
+    const card = document.createElement('div');
+    const isActive = t.id === currentThemeMob;
+    card.style.cssText = 'display:flex;flex-direction:column;gap:6px;cursor:pointer;'
+      + 'padding:10px;border-radius:10px;border:' + (isActive ? '2px solid var(--accent)' : '1px solid var(--border2)')
+      + ';background:' + (isActive ? 'rgba(0,0,0,.15)' : 'var(--bg3)') + ';transition:.15s';
+
+    // Mini preview con los 3 swatches
+    const preview = document.createElement('div');
+    preview.style.cssText = 'display:flex;border-radius:6px;overflow:hidden;height:28px';
+    t.swatches.forEach((col, i) => {
+      const s = document.createElement('div');
+      s.style.cssText = 'flex:' + (i===2?'0.8':'1') + ';background:' + col;
+      // Punto de acento en el último
+      if (i===2) {
+        s.style.display = 'flex';
+        s.style.alignItems = 'center';
+        s.style.justifyContent = 'center';
+        s.innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:'+t.bg+'"></div>';
+      }
+      preview.appendChild(s);
+    });
+
+    const name = document.createElement('div');
+    name.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);font-family:var(--mono);text-align:center';
+    name.textContent = t.name;
+
+    if (isActive) {
+      const check = document.createElement('div');
+      check.style.cssText = 'font-size:10px;text-align:center;color:var(--accent)';
+      check.textContent = '✓ Activo';
+      card.appendChild(preview);
+      card.appendChild(name);
+      card.appendChild(check);
+    } else {
+      card.appendChild(preview);
+      card.appendChild(name);
+    }
+
+    card.onclick = () => applyThemeMob(t.id);
+    el.appendChild(card);
+  });
+}
+
+
+applyThemeMob(currentThemeMob);
+updStatus();
+if(API_URL) loadConfig();
+window.addEventListener('load',()=>{
+  setTimeout(()=>{ const s=document.getElementById('pwa-splash'); if(s)s.classList.add('hide'); },700);
+});
+</script>
+
+<!-- SPLASH -->
+<div id="pwa-splash">
+  <div class="splash-icon">📈</div>
+  <div class="splash-title">TradingJournal</div>
+  <div class="splash-sub">FUTURES · v2 · MOBILE</div>
+</div>
+</body>
+</html>
